@@ -33,6 +33,17 @@ class fntsmc:
         self.control = ctrl0
 
     def control_update(self, kp: float, m: float, vel: np.ndarray, e: np.ndarray, de: np.ndarray, dd_ref: np.ndarray, obs: np.ndarray):
+        """
+        :param kp:
+        :param m:
+        :param vel:
+        :param e:
+        :param de:
+        :param dd_ref:
+        :param obs:
+        :brief:         输出为 x y z 三轴的虚拟的加速度
+        :return:
+        """
         k_tanh_e = 5
         k_tanh_sigma0 = 5
         self.sigma_o = de + self.k1 * e + self.gamma * np.fabs(e) ** self.alpha * np.tanh(k_tanh_e * e)
