@@ -3,81 +3,56 @@ import numpy as np
 from utils.utils import *
 
 
-class UAV:
-    def __init__(self,
-                 m: float = 0.8,
-                 g: float = 9.8,
-                 J: np.ndarray = np.array([4.212e-3, 4.212e-3, 8.255e-3]),
-                 d: float = 0.12,
-                 CT: float = 2.168e-6,
-                 CM: float = 2.136e-8,
-                 J0: float = 1.01e-5,
-                 kr: float = 1e-3,
-                 kt: float = 1e-3,
-                 pos0=None,
-                 vel0=None,
-                 angle0=None,
-                 omega0_body=None
-                 ):
-        if omega0_body is None:
-            omega0_body = np.array([0, 0, 0])
-        if angle0 is None:
-            angle0 = np.array([0, 0, 0])
-        if vel0 is None:
-            vel0 = np.array([0, 0, 0])
-        if pos0 is None:
-            pos0 = np.array([0, 0, 0])
+class uav_param:
+    def __init__(self):
+        self.m: float = 0.8  # 无人机质量
+        self.g: float = 9.8  # 重力加速度
+        self.J: np.ndarray = np.array([4.212e-3, 4.212e-3, 8.255e-3])  # 转动惯量
+        self.d: float = 0.12  # 机臂长度 'X'构型
+        self.CT: float = 2.168e-6  # 螺旋桨升力系数
+        self.CM: float = 2.136e-8  # 螺旋桨力矩系数
+        self.J0: float = 1.01e-5  # 电机和螺旋桨的转动惯量
+        self.kr: float = 1e-3  # 旋转阻尼系数
+        self.kt: float = 1e-3  # 平移阻尼系数
+        self.pos0: np.ndarray = np.array([0, 0, 0])
+        self.vel0: np.ndarray = np.array([0, 0, 0])
+        self.angle0: np.ndarray = np.array([0, 0, 0])
+        self.pqr0: np.ndarray = np.array([0, 0, 0])
+        self.dt = 0.01
+        self.time_max = 30
 
-        '''physical parameters'''
-        self.m = m  # 无人机质量
-        self.g = g  # 重力加速度
-        self.J = J  # 转动惯量
-        self.d = d  # 机臂长度 'X'构型
-        self.CT = CT  # 螺旋桨升力系数
-        self.CM = CM  # 螺旋桨力矩系数
-        self.J0 = J0  # 电机和螺旋桨的转动惯量
-        self.kr = kr  # 旋转阻尼系数
-        self.kt = kt  # 平移阻尼系数
+
+class UAV:
+    def __init__(self, param: uav_param):
+        self.m = param.m  # 无人机质量
+        self.g = param.g  # 重力加速度
+        self.J = param.J  # 转动惯量
+        self.d = param.d  # 机臂长度 'X'构型
+        self.CT = param.CT  # 螺旋桨升力系数
+        self.CM = param.CM  # 螺旋桨力矩系数
+        self.J0 = param.J0  # 电机和螺旋桨的转动惯量
+        self.kr = param.kr  # 旋转阻尼系数
+        self.kt = param.kt  # 平移阻尼系数
         self.rotor_wMax = 25000.0 * 2 * np.pi / 60  # 电机最大转速，25000rpm
 
-        self.x = pos0[0]
-        self.y = pos0[1]
-        self.z = pos0[2]
+        [self.x, self.y, self.z] = param.pos0[:]
+        [self.vx, self.vy, self.vz] = param.vel0[:]
+        [self.phi, self.theta, self.psi] = param.angle0[:]
+        [self.p, self.q, self.r] = param.pqr0[:]
 
-        self.vx = vel0[0]
-        self.vy = vel0[1]
-        self.vz = vel0[2]
+        self.w_rotor = np.zeros(4)
 
-        self.phi = angle0[0]
-        self.theta = angle0[1]
-        self.psi = angle0[2]
-
-        self.p = omega0_body[0]
-        self.q = omega0_body[1]
-        self.r = omega0_body[2]
-
-        '''top right-1 bottom left-2 top left-3 bottom-right-4'''
-        self.power_allocation_mat = \
-            np.array([[CT, CT, CT, CT],
-                      [-CT * d / np.sqrt(2), CT * d / np.sqrt(2), CT * d / np.sqrt(2), -CT * d / np.sqrt(2)],
-                      [CT * d / np.sqrt(2), -CT * d / np.sqrt(2), CT * d / np.sqrt(2), -CT * d / np.sqrt(2)],
-                      [-CM, -CM, CM, CM]])  # 这个矩阵满秩
-
-        self.dt = 0.001
-        self.n = 0  # 记录走过的拍数
-        self.time = 0.  # 当前时间
-        self.time_max = 30  # 每回合最大时间
+        self.dt = param.dt
+        self.n = 0
+        self.time = 0.
+        self.time_max = param.time_max
         '''physical parameters'''
 
         '''control'''
         self.throttle = self.m * self.g  # 油门
         self.torque = np.array([0., 0., 0.]).astype(float)  # 转矩
 
-        self.control_ideal = np.array([self.m * self.g, 0., 0., 0.]).astype(float)  # 控制量
-        self.control = self.control_ideal.copy()
-
-        self.w_rotor_ideal = np.sqrt(np.dot(np.linalg.inv(self.power_allocation_mat), self.control_ideal))  # 理想电机转速
-        self.w_rotor = self.w_rotor_ideal.copy()
+        self.control = np.array([self.m * self.g, 0., 0., 0.]).astype(float)
         '''control'''
 
         'state limitation'
@@ -101,23 +76,16 @@ class UAV:
         '''datasave'''
 
         '''other'''
-        # self.f1_rho1 = np.zeros((4, 4)).astype(float)
-        # self.f2_rho2 = np.zeros((4, 4)).astype(float)
-        # self.g_rho1 = np.zeros((4, 4)).astype(float)
         self.f1g_old: np.ndarray = np.dot(self.f1(), self.h())
         self.f1g_new: np.ndarray = np.dot(self.f1(), self.h())
         self.Frho2_f1f2_old: np.ndarray = np.dot(self.dot_f1(), self.rho2()) + np.dot(self.f1(), self.f2())
         self.Frho2_f1f2_new: np.ndarray = np.dot(self.dot_f1(), self.rho2()) + np.dot(self.f1(), self.f2())
         '''other'''
 
-    def rotor_transfer(self) -> np.ndarray:
-        return self.w_rotor_ideal
-
-    def ode(self, xx: np.ndarray, dis: np.ndarray, is_motor_ideal: bool = True):
+    def ode(self, xx: np.ndarray, dis: np.ndarray):
         """
         :param dis:             干扰
         :param xx:              状态
-        :param is_motor_ideal:  电机是否理想
         :return:                状态的导数
         """
         '''
@@ -141,13 +109,6 @@ class UAV:
         [_x, _y, _z, _vx, _vy, _vz, _phi, _theta, _psi, _p, _q, _r] = xx[0:12]
 
         '''至此，已经计算出理想控制量的，油门 + 三转矩'''
-
-        if is_motor_ideal:
-            self.w_rotor = self.w_rotor_ideal.copy()
-            self.control = self.control_ideal.copy()
-        else:
-            self.w_rotor = self.rotor_transfer()
-            self.control = np.dot(self.power_allocation_mat, self.w_rotor ** 2)
         self.throttle = self.control[0]
         self.torque = self.control[1: 4]
 
@@ -183,8 +144,8 @@ class UAV:
 
         return np.array([dx, dy, dz, dvx, dvy, dvz, dphi, dtheta, dpsi, dp, dq, dr])
 
-    def rk44(self, action: np.ndarray, dis: np.ndarray, n: int = 10):
-        self.control_ideal = action
+    def rk44(self, action: np.ndarray, dis: np.ndarray, n: int = 10, att_only: bool = False):
+        self.control = action
         h = self.dt / n  # RK-44 解算步长
         # tt = self.time + self.dt
 
@@ -192,23 +153,19 @@ class UAV:
         self.f1g_old = self.f1g_new.copy()
         self.Frho2_f1f2_old = self.Frho2_f1f2_new.copy()
         '''时间更新之前，先把需要求导的保存'''
+
         cc = 0
-        while cc < n:  # self.time < tt
-            xx_old = np.array([self.x, self.y, self.z,
-                               self.vx, self.vy, self.vz,
-                               self.phi, self.theta, self.psi,
-                               self.p, self.q, self.r])
-            K1 = h * self.ode(xx_old, dis)
-            K2 = h * self.ode(xx_old + K1 / 2, dis)
-            K3 = h * self.ode(xx_old + K2 / 2, dis)
-            K4 = h * self.ode(xx_old + K3, dis)
-            xx_new = xx_old + (K1 + 2 * K2 + 2 * K3 + K4) / 6
-            xx_temp = xx_new.copy()
-            [self.x, self.y, self.z] = xx_temp[0:3]
-            [self.vx, self.vy, self.vz] = xx_temp[3:6]
-            [self.phi, self.theta, self.psi] = xx_temp[6:9]
-            [self.p, self.q, self.r] = xx_temp[9:12]
+        xx = self.uav_state_call_back()
+        while cc < n:
+            K1 = h * self.ode(xx, dis)
+            K2 = h * self.ode(xx + K1 / 2, dis)
+            K3 = h * self.ode(xx + K2 / 2, dis)
+            K4 = h * self.ode(xx + K3, dis)
+            xx = xx + (K1 + 2 * K2 + 2 * K3 + K4) / 6
             cc += 1
+        if att_only:
+            xx[0:6] = np.zeros(6)[:]
+        self.set_state(xx)
         self.time += self.dt
         if self.psi > np.pi:  # 如果角度超过 180 度
             self.psi -= 2 * np.pi
@@ -242,7 +199,8 @@ class UAV:
     def uav_pqr(self):
         return np.array([self.p, self.q, self.r])
 
-    '''内环控制器相关的'''
+    def set_state(self, xx: np.ndarray):
+        [self.x, self.y, self.z, self.vx, self.vy, self.vz, self.phi, self.theta, self.psi, self.p, self.q, self.r] = xx[:]
 
     def f1(self):
         """
@@ -299,7 +257,7 @@ class UAV:
     def dot_rho2(self, uncertainty: np.ndarray):
         # Fdx, Fdy, Fdz, dp, dq, dr
         dp, dq, dr = uncertainty[3], uncertainty[4], uncertainty[5]
-        return self.f2() + np.dot(self.h(), self.control) + np.array([dp, dq, dr])
+        return self.f2() + np.dot(self.h(), self.torque) + np.array([dp, dq, dr])
 
     def dot_f1(self):
         dot_rho1 = self.dot_rho1()  # dphi dtheta dpsi
@@ -323,9 +281,6 @@ class UAV:
     def dot_Frho2_f1f2(self):
         return (self.Frho2_f1f2_new - self.Frho2_f1f2_old) / self.dt
 
-    '''内环控制器相关的'''
-
-    '''外环控制器相关的'''
     def eta(self):
         return np.array([self.x, self.y, self.z])
 
@@ -336,4 +291,3 @@ class UAV:
         return self.control[0] / self.m * np.array([C(self.phi) * C(self.psi) * S(self.theta) + S(self.phi) * S(self.psi),
                                                     C(self.phi) * S(self.psi) * S(self.theta) - S(self.phi) * C(self.psi),
                                                     C(self.phi) * C(self.theta)]) - np.array([0., 0., self.g])
-    '''外环控制器相关的'''

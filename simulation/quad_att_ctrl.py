@@ -8,7 +8,7 @@ from observer.HSMO import hsmo
 from observer.AFTO import afto
 from observer.RO import ro
 from controller.DSMC import dsmc
-from uav.uav import UAV
+from uav.uav import UAV, uav_param
 from utils.ref_cmd import *
 from utils.collector import data_collector
 
@@ -21,8 +21,27 @@ observer_pool = ['neso', 'hsmo', 'afto', 'ro', 'none']
 # none: 没观测器
 OBSERVER = observer_pool[3]
 
+'''Parameter list of the quadrotor'''
+param = uav_param()
+param.m = 0.8
+param.g = 9.8
+param.J = np.array([4.212e-3, 4.212e-3, 8.255e-3])
+param.d = 0.12
+param.CT = 2.168e-6
+param.CM = 2.136e-8
+param.J0 = 1.01e-5
+param.kr = 1e-3
+param.kt = 1e-3
+param.pos0 = np.array([0, 0, 0])
+param.vel0 = np.array([0, 0, 0])
+param.angle0 = np.array([0, 0, 0])
+param.pqr0 = np.array([0, 0, 0])
+param.dt = 0.01
+param.time_max = 30
+'''Parameter list of the quadrotor'''
+
 if __name__ == '__main__':
-    uav = UAV()
+    uav = UAV(param)
     ctrl_in = dsmc(ctrl0=np.array([0, 0, 0]).astype(float), dt=uav.dt)
 
     ref_amplitude = np.array([np.pi / 3, np.pi / 3, np.pi / 2])
@@ -134,7 +153,7 @@ if __name__ == '__main__':
                       'state': np.hstack((np.zeros(6), uav.uav_att_pqr_call_back()))}
         data_record.record(data=data_block)
 
-        uav.rk44(action=action_4_uav, dis=uncertainty, n=1)
+        uav.rk44(action=action_4_uav, dis=uncertainty, n=1, att_only=True)
         ctrl_in.control_update()
 
     # data_record.package2file(path=os.getcwd() + '/datasave/')

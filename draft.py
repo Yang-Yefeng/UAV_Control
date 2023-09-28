@@ -1,8 +1,7 @@
 import numpy as np
 
 
-a = np.zeros(6)
-b = np.array([2,3,4,5,6,8])
-
-c = np.hstack((a,b))
-print(c)
+xx = np.arange(15)
+print(xx)
+xx[0:6] = np.zeros(6)[:]
+print(xx)

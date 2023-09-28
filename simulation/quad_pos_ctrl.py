@@ -8,7 +8,7 @@ from observer.AFTO import afto
 from observer.RO import ro
 from controller.DSMC import dsmc
 from controller.FNTSMC import fntsmc
-from uav.uav import UAV
+from uav.uav import UAV, uav_param
 from utils.ref_cmd import *
 from utils.utils import *
 from utils.collector import data_collector
@@ -19,27 +19,44 @@ observer_pool = ['neso', 'hsmo', 'afto', 'ro', 'none']
 # afto: 固定时间观测器
 # ro:   龙贝格 (勒贝格) 观测器
 # none: 没观测器
-OBSERVER_IN = observer_pool[2]
-OBSERVER_OUT = observer_pool[2]
+OBSERVER_IN = observer_pool[0]
+OBSERVER_OUT = observer_pool[0]
+
+'''Parameter list of the quadrotor'''
+param = uav_param()
+param.m = 0.8
+param.g = 9.8
+param.J = np.array([4.212e-3, 4.212e-3, 8.255e-3])
+param.d = 0.12
+param.CT = 2.168e-6
+param.CM = 2.136e-8
+param.J0 = 1.01e-5
+param.kr = 1e-3
+param.kt = 1e-3
+param.pos0 = np.array([0, 0, 0])
+param.vel0 = np.array([0, 0, 0])
+param.angle0 = np.array([0, 0, 0])
+param.pqr0 = np.array([0, 0, 0])
+param.dt = 0.001
+param.time_max = 30
+'''Parameter list of the quadrotor'''
 
 if __name__ == '__main__':
-    '''inner controller initialization'''
-    uav = UAV()
+    uav = UAV(param)
 
-    '''controller initialization'''
-    ctrl_out = fntsmc(k1=np.array([1.2, 0.8, 0.5]),         # 0.4
-                      k2=np.array([0.2, 0.6, 0.5]),     # 0.4
+    ctrl_out = fntsmc(k1=np.array([1.2, 0.8, 0.5]),  # 0.4
+                      k2=np.array([0.2, 0.6, 0.5]),  # 0.4
                       alpha=np.array([1.2, 1.5, 1.2]),  # 1.2
-                      beta=np.array([0.3, 0.3, 0.5]),       # 0.7
+                      beta=np.array([0.3, 0.3, 0.5]),  # 0.7
                       gamma=np.array([0.2, 0.2, 0.2]),  # 0.2
-                      lmd=np.array([2.0, 2.0, 2.0]),    # 2.0
+                      lmd=np.array([2.0, 2.0, 2.0]),  # 2.0
                       dim=3,
                       dt=uav.dt,
                       ctrl0=np.array([0., 0., uav.m * uav.g]))  #
     ctrl_in = dsmc(ctrl0=np.array([0, 0, 0]).astype(float), dt=uav.dt)
 
     '''reference signal initialization'''
-    ref_amplitude = np.array([2, 2, 1, np.pi / 2])      # x y z psi
+    ref_amplitude = np.array([2, 2, 1, np.pi / 2])  # x y z psi
     # ref_amplitude = np.array([0, 0, 0, 0])  # x y z psi
     ref_period = np.array([5, 5, 4, 5])
     ref_bias_a = np.array([2, 2, 1, 0])
@@ -192,8 +209,8 @@ if __name__ == '__main__':
         '''5. inner-loop control'''
         dot_phi_d = (phi_d - phi_d_old) / uav.dt
         dot_theta_d = (theta_d - theta_d_old) / uav.dt
-        rhod = np.array([phi_d, theta_d, ref[3]])                   # phi_d theta_d psi_d
-        dot_rhod = np.array([dot_phi_d, dot_theta_d, dot_ref[3]])   # phi_d theta_d psi_d 的一阶导数
+        rhod = np.array([phi_d, theta_d, ref[3]])  # phi_d theta_d psi_d
+        dot_rhod = np.array([dot_phi_d, dot_theta_d, dot_ref[3]])  # phi_d theta_d psi_d 的一阶导数
 
         e_I = uav.rho1() - rhod
         dot_e_I_old = dot_e_I.copy()
@@ -230,7 +247,7 @@ if __name__ == '__main__':
 
         '''6. get the actual control command for UAV'''
         action_4_uav = np.array([throttle, ctrl_in.control[0], ctrl_in.control[1], ctrl_in.control[2]])
-        uav.rk44(action=action_4_uav, dis=uncertainty, n=1)
+        uav.rk44(action=action_4_uav, dis=uncertainty, n=1, att_only=False)
 
         '''7. '''
         data_block = {'time': uav.time,
