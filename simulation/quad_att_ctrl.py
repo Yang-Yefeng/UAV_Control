@@ -1,7 +1,10 @@
-import os
 import datetime
+import os
+import sys
+
 import matplotlib.pyplot as plt
-import numpy as np
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 
 from observer.NESO import neso
 from observer.HSMO import hsmo
@@ -156,11 +159,11 @@ if __name__ == '__main__':
         uav.rk44(action=action_4_uav, dis=uncertainty, n=1, att_only=True)
         ctrl_in.control_update()
 
-    # data_record.package2file(path=os.getcwd() + '/datasave/')
-    # print(os.path.abspath('.'))
-    new_path = '../datasave/' + datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d-%H-%M-%S') + '/'
-    os.mkdir(new_path)
-    data_record.package2file(new_path)
+    SAVE = False
+    if SAVE:
+        new_path = '../datasave/' + datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d-%H-%M-%S') + '/'
+        os.mkdir(new_path)
+        data_record.package2file(new_path)
 
     data_record.plot_att()
     data_record.plot_torque()
