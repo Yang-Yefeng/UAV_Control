@@ -3,14 +3,14 @@ import numpy as np
 
 class robust_differentiator_3rd:
     def __init__(self,
-                 dim : int,
-                 dt: float,
                  m1: np.ndarray,
                  m2: np.ndarray,
                  m3: np.ndarray,
                  n1: np.ndarray,
                  n2: np.ndarray,
-                 n3: np.ndarray):
+                 n3: np.ndarray,
+                 dim: int,
+                 dt: float):
         self.a1 = 3. / 4.
         self.a2 = 2. / 4.
         self.a3 = 1. / 4.
@@ -33,7 +33,7 @@ class robust_differentiator_3rd:
         self.dz3 = np.zeros(dim)
         self.dt = dt
 
-    def set_init_z(self, z0: np.ndarray, dz0: np.ndarray):
+    def set_init(self, z0: np.ndarray, dz0: np.ndarray):
         """
         :param z0:
         :return:

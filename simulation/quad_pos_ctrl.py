@@ -38,7 +38,7 @@ param.vel0 = np.array([0, 0, 0])
 param.angle0 = np.array([0, 0, 0])
 param.pqr0 = np.array([0, 0, 0])
 param.dt = 0.001
-param.time_max = 30
+param.time_max = 20
 '''Parameter list of the quadrotor'''
 
 if __name__ == '__main__':

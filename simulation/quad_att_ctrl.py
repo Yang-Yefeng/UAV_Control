@@ -10,19 +10,20 @@ from observer.NESO import neso
 from observer.HSMO import hsmo
 from observer.AFTO import afto
 from observer.RO import ro
+from observer.RobustDifferentatior_3rd import robust_differentiator_3rd as rd3
 from controller.DSMC import dsmc
 from uav.uav import UAV, uav_param
 from utils.ref_cmd import *
 from utils.collector import data_collector
 
 IS_IDEAL = False
-observer_pool = ['neso', 'hsmo', 'afto', 'ro', 'none']
+observer_pool = ['neso', 'hsmo', 'afto', 'ro', 'rd3', 'none']
 # neso: 非线性扩张状态观测器
 # hsmo: 高阶滑模观测器
 # afto: 固定时间观测器
 # ro:   龙贝格 (勒贝格) 观测器
 # none: 没观测器
-OBSERVER = observer_pool[3]
+OBSERVER = observer_pool[4]
 
 '''Parameter list of the quadrotor'''
 param = uav_param()
@@ -42,6 +43,7 @@ param.pqr0 = np.array([0, 0, 0])
 param.dt = 0.001
 param.time_max = 20
 '''Parameter list of the quadrotor'''
+
 
 if __name__ == '__main__':
     uav = UAV(param)
@@ -90,6 +92,17 @@ if __name__ == '__main__':
                       dim=3,
                       dt=uav.dt)
         observer.set_init(de=de0)
+    elif OBSERVER == 'rd3':
+        '''m 和 n 可以相等，也可以不同，但是不同的m，不能相同'''
+        observer = rd3(m1,
+                 m2,
+                 m3,
+                 n1,
+                 n2,
+                 n3,
+                 dim=3,
+                 dt=uav.dt)
+        observer.set_init()
     else:
         observer = None
 
