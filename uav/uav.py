@@ -18,7 +18,7 @@ class uav_param:
         self.vel0: np.ndarray = np.array([0, 0, 0])
         self.angle0: np.ndarray = np.array([0, 0, 0])
         self.pqr0: np.ndarray = np.array([0, 0, 0])
-        self.dt = 0.01
+        self.dt = 0.001
         self.time_max = 30
 
 
