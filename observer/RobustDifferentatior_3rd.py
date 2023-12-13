@@ -4,27 +4,39 @@ from typing import Union
 
 class robust_differentiator_3rd:
     def __init__(self,
-                 m1: Union[np.ndarray, list],
-                 m2: Union[np.ndarray, list],
-                 m3: Union[np.ndarray, list],
-                 n1: Union[np.ndarray, list],
-                 n2: Union[np.ndarray, list],
-                 n3: Union[np.ndarray, list],
-                 dim: int,
-                 dt: float):
+                 m1: Union[np.ndarray, list] = np.array([0, 0, 0]),
+                 m2: Union[np.ndarray, list] = np.array([0, 0, 0]),
+                 m3: Union[np.ndarray, list] = np.array([0, 0, 0]),
+                 n1: Union[np.ndarray, list] = np.array([0, 0, 0]),
+                 n2: Union[np.ndarray, list] = np.array([0, 0, 0]),
+                 n3: Union[np.ndarray, list] = np.array([0, 0, 0]),
+                 use_freq: bool = False,
+                 omega: Union[np.ndarray, list] = np.array([0, 0, 0]),
+                 dim: int = 3,
+                 dt: float = 0.001):
         self.a1 = 3. / 4.
         self.a2 = 2. / 4.
         self.a3 = 1. / 4.
         self.b1 = 5. / 4.
         self.b2 = 6. / 4.
         self.b3 = 7. / 4.
-
-        self.m1 = np.array(m1)
-        self.m2 = np.array(m2)
-        self.m3 = np.array(m3)
-        self.n1 = np.array(n1)
-        self.n2 = np.array(n2)
-        self.n3 = np.array(n3)
+        if use_freq:
+            m1n1 = omega[0] + omega[1] + omega[2]
+            m2n2 = omega[0]*omega[1]+omega[0]*omega[2]+omega[1]*omega[2]
+            m3n3 = omega[0]*omega[1]*omega[2]
+            self.m1 = m1n1 * np.ones(dim)
+            self.m2 = m2n2 * np.ones(dim)
+            self.m3 = m3n3 * np.ones(dim)
+            self.n1 = m1n1 * np.ones(dim)
+            self.n2 = m2n2 * np.ones(dim)
+            self.n3 = m3n3 * np.ones(dim)
+        else:
+            self.m1 = np.array(m1)
+            self.m2 = np.array(m2)
+            self.m3 = np.array(m3)
+            self.n1 = np.array(n1)
+            self.n2 = np.array(n2)
+            self.n3 = np.array(n3)
 
         self.z1 = np.zeros(dim)
         self.z2 = np.zeros(dim)

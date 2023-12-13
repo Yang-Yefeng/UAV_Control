@@ -1,6 +1,7 @@
 import os
 import datetime
 import matplotlib.pyplot as plt
+import numpy as np
 
 from observer.NESO import neso
 from observer.HSMO import hsmo
@@ -292,7 +293,8 @@ if __name__ == '__main__':
                       'state': uav.uav_state_call_back()}
         data_record.record(data=data_block)
 
-    new_path = '../datasave/' + datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d-%H-%M-%S') + '/'
+    new_path = (os.path.dirname(os.path.abspath(__file__)) +
+                '/../datasave/' + datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d-%H-%M-%S') + '/')
     os.mkdir(new_path)
     data_record.package2file(path=new_path)
 
