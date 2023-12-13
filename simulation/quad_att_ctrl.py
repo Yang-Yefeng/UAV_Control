@@ -3,6 +3,7 @@ import os
 import sys
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 
@@ -22,6 +23,7 @@ observer_pool = ['neso', 'hsmo', 'afto', 'ro', 'rd3', 'none']
 # hsmo: 高阶滑模观测器
 # afto: 固定时间观测器
 # ro:   龙贝格 (勒贝格) 观测器
+# rd3:  三阶鲁棒微分器
 # none: 没观测器
 OBSERVER = observer_pool[4]
 
@@ -40,10 +42,9 @@ param.pos0 = np.array([0, 0, 0])
 param.vel0 = np.array([0, 0, 0])
 param.angle0 = np.array([0, 0, 0])
 param.pqr0 = np.array([0, 0, 0])
-param.dt = 0.001
+param.dt = 1e-3
 param.time_max = 20
 '''Parameter list of the quadrotor'''
-
 
 if __name__ == '__main__':
     uav = UAV(param)
@@ -93,16 +94,19 @@ if __name__ == '__main__':
                       dt=uav.dt)
         observer.set_init(de=de0)
     elif OBSERVER == 'rd3':
-        '''m 和 n 可以相等，也可以不同，但是不同的m，不能相同'''
-        observer = rd3(m1,
-                 m2,
-                 m3,
-                 n1,
-                 n2,
-                 n3,
-                 dim=3,
-                 dt=uav.dt)
-        observer.set_init()
+        '''
+            m 和 n 可以相等，也可以不同。m对应低次，n对应高次。
+        '''
+        observer = rd3(m1=11 * np.ones(3),
+                       m2=35 * np.ones(3),
+                       m3=25 * np.ones(3),
+                       n1=3 * np.ones(3),
+                       n2=3 * np.ones(3),
+                       n3=3 * np.ones(3),
+                       dim=3,
+                       dt=uav.dt)
+        syst_dynamic0 = np.dot(uav.dot_f1(), uav.rho2()) + np.dot(uav.f1(), uav.f2()) + np.dot(uav.f1(), np.dot(uav.h(), ctrl_in.control))
+        observer.set_init(e0=e0, de0=de0, syst_dynamic=syst_dynamic0)
     else:
         observer = None
 
@@ -110,8 +114,8 @@ if __name__ == '__main__':
     data_record = data_collector(N=int(uav.time_max / uav.dt))
 
     while uav.time < uav.time_max:
-        if uav.n % 1000 == 0:
-            print(uav.n)
+        if uav.n % int(1 / param.dt) == 0:
+            print('time: %.2f s.' % (uav.n / int(1 / param.dt)))
         '''1. 计算 tk 时刻参考信号 和 生成不确定性'''
         uncertainty = generate_uncertainty(time=uav.time, is_ideal=False)
         rhod, dot_rhod, dot2_rhod, dot3_rhod = ref_inner(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
@@ -141,6 +145,9 @@ if __name__ == '__main__':
         elif OBSERVER == 'ro':
             syst_dynamic = np.dot(uav.dot_f1(), uav.rho2()) + np.dot(uav.f1(), uav.f2()) + np.dot(uav.f1(), np.dot(uav.h(), ctrl_in.control))
             delta_obs, dot_delta_obs = observer.observe(syst_dynamic=syst_dynamic, de=de)
+        elif OBSERVER == 'rd3':
+            syst_dynamic = np.dot(uav.dot_f1(), uav.rho2()) + np.dot(uav.f1(), uav.f2()) + np.dot(uav.f1(), np.dot(uav.h(), ctrl_in.control))
+            delta_obs, dot_delta_obs = observer.observe(syst_dynamic=syst_dynamic, e=e)
         else:
             delta_obs, dot_delta_obs = np.zeros(3), np.zeros(3)
 

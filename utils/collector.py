@@ -20,19 +20,21 @@ class data_collector:
         self.index = 0
         self.name = ['uav_state.csv', 'ref_cmd.csv', 'control.csv', 'observe.csv']
         self.path = os.getcwd() + '/datasave/'
+        self.N = N
 
     def record(self, data: dict):
-        self.t[self.index][0] = data['time']
-        self.control[self.index] = data['control']
-        self.ref_angle[self.index] = data['ref_angle']
-        self.ref_pos[self.index] = data['ref_pos']
-        self.ref_vel[self.index] = data['ref_vel']
-        self.d_in[self.index] = data['d_in']
-        self.d_in_obs[self.index] = data['d_in_obs']
-        self.d_out[self.index] = data['d_out']
-        self.d_out_obs[self.index] = data['d_out_obs']
-        self.state[self.index] = data['state']
-        self.index += 1
+        if self.index < self.N:
+            self.t[self.index][0] = data['time']
+            self.control[self.index] = data['control']
+            self.ref_angle[self.index] = data['ref_angle']
+            self.ref_pos[self.index] = data['ref_pos']
+            self.ref_vel[self.index] = data['ref_vel']
+            self.d_in[self.index] = data['d_in']
+            self.d_in_obs[self.index] = data['d_in_obs']
+            self.d_out[self.index] = data['d_out']
+            self.d_out_obs[self.index] = data['d_out_obs']
+            self.state[self.index] = data['state']
+            self.index += 1
 
     def package2file(self, path: str):
         pd.DataFrame(np.hstack((self.t, self.state)),
@@ -191,7 +193,7 @@ class data_collector:
         plt.plot(self.t, self.d_in_obs[:, 0], 'blue')
         plt.grid(True)
         plt.xlabel('time(s)')
-        plt.ylim((-4, 4))
+        # plt.ylim((-4, 4))
         plt.title('observe error dp')
 
         plt.subplot(1, 3, 2)
@@ -199,7 +201,7 @@ class data_collector:
         plt.plot(self.t, self.d_in_obs[:, 1], 'blue')
         plt.grid(True)
         plt.xlabel('time(s)')
-        plt.ylim((-4, 4))
+        # plt.ylim((-4, 4))
         plt.title('observe error dq')
 
         plt.subplot(1, 3, 3)
@@ -207,7 +209,7 @@ class data_collector:
         plt.plot(self.t, self.d_in_obs[:, 2], 'blue')
         plt.grid(True)
         plt.xlabel('time(s)')
-        plt.ylim((-4, 4))
+        # plt.ylim((-4, 4))
         plt.title('observe dr')
 
     def plot_outer_obs(self):
@@ -217,7 +219,7 @@ class data_collector:
         plt.plot(self.t, self.d_out_obs[:, 0], 'blue')
         plt.grid(True)
         plt.xlabel('time(s)')
-        plt.ylim((-4, 4))
+        # plt.ylim((-4, 4))
         plt.title('observe dx')
 
         plt.subplot(1, 3, 2)
@@ -225,7 +227,7 @@ class data_collector:
         plt.plot(self.t, self.d_out_obs[:, 1], 'blue')
         plt.grid(True)
         plt.xlabel('time(s)')
-        plt.ylim((-4, 4))
+        # plt.ylim((-4, 4))
         plt.title('observe dy')
 
         plt.subplot(1, 3, 3)
@@ -233,5 +235,5 @@ class data_collector:
         plt.plot(self.t, self.d_out_obs[:, 2], 'blue')
         plt.grid(True)
         plt.xlabel('time(s)')
-        plt.ylim((-4, 4))
+        # plt.ylim((-4, 4))
         plt.title('observe dz')

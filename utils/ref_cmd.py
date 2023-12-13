@@ -54,12 +54,30 @@ def generate_uncertainty(time: float, is_ideal: bool = False) -> np.ndarray:
     else:
         T = 5
         w = 2 * np.pi / T
-        Fdx = 0.5 * np.sin(w * time) + 0.2 * np.cos(2 * w * time) + 0.2
-        Fdy = 0.5 * np.cos(w * time) + 0.2 * np.sin(2 * w * time) + 0.4
-        Fdz = 0.5 * np.sin(w * time) + 0.2 * np.cos(2 * w * time) - 0.5
-        dp = 0.5 * np.sin(w * time) + 0.2 * np.cos(w * time)
-        dq = 0.5 * np.cos(w * time) + 0.2 * np.sin(w * time)
-        dr = 0.5 * np.cos(w * time) + 0.2 * np.sin(w * time)
+        phi0 = 0.
+        if time <= 5:
+            phi0 = 0.
+            Fdx = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(2 * w * time + phi0) - 1.0 * np.cos(5 * w + time + phi0) + 0.2
+            Fdy = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(2 * w * time + phi0) - 1.0 * np.sin(5 * w + time + phi0) + 0.4
+            Fdz = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(2 * w * time + phi0) - 1.0 * np.cos(5 * w + time + phi0) - 0.5
+            dp = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(w * time + phi0)
+            dq = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
+            dr = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
+        elif 5 < time <= 10:
+            Fdx = 1.5
+            Fdy = 1.0 * (time - 5.0)
+            Fdz = -0.6
+            dp = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(w * time + phi0)
+            dq = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
+            dr = 0.5
+        else:
+            phi0 = np.pi / 2
+            Fdx = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(2 * w * time + phi0) - 1.0 * np.cos(5 * w + time + phi0) + 0.2
+            Fdy = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(2 * w * time + phi0) - 1.0 * np.sin(5 * w + time + phi0) + 0.4
+            Fdz = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(2 * w * time + phi0) - 1.0 * np.cos(5 * w + time + phi0) - 0.5
+            dp = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(w * time + phi0)
+            dq = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
+            dr = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
 
         # Fdx = 0.5 * np.sin(w * time)
         # Fdy = 0.5 * np.cos(w * time)

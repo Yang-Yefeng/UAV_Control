@@ -8,19 +8,21 @@ from observer.AFTO import afto
 from observer.RO import ro
 from controller.DSMC import dsmc
 from controller.FNTSMC import fntsmc
+from observer.RobustDifferentatior_3rd import robust_differentiator_3rd as rd3
 from uav.uav import UAV, uav_param
 from utils.ref_cmd import *
 from utils.utils import *
 from utils.collector import data_collector
 
-observer_pool = ['neso', 'hsmo', 'afto', 'ro', 'none']
+observer_pool = ['neso', 'hsmo', 'afto', 'ro', 'rd3', 'none']
 # neso: 非线性扩张状态观测器
 # hsmo: 高阶滑模观测器
 # afto: 固定时间观测器
 # ro:   龙贝格 (勒贝格) 观测器
+# rd3:  三阶鲁棒微分器
 # none: 没观测器
-OBSERVER_IN = observer_pool[0]
-OBSERVER_OUT = observer_pool[0]
+OBSERVER_IN = observer_pool[4]
+OBSERVER_OUT = observer_pool[4]
 
 '''Parameter list of the quadrotor'''
 param = uav_param()
@@ -115,6 +117,17 @@ if __name__ == '__main__':
                     k2=np.array([5., 5., 5.]),
                     dim=3,
                     dt=uav.dt)
+    elif OBSERVER_IN == 'rd3':
+        obs_in = rd3(m1=11 * np.ones(3),
+                     m2=35 * np.ones(3),
+                     m3=25 * np.ones(3),
+                     n1=3 * np.ones(3),
+                     n2=3 * np.ones(3),
+                     n3=3 * np.ones(3),
+                     dim=3,
+                     dt=uav.dt)
+        syst_dynamic_in = np.dot(uav.dot_f1(), uav.rho2()) + np.dot(uav.f1(), uav.f2()) + np.dot(uav.f1(), np.dot(uav.h(), ctrl_in.control))
+        obs_in.set_init(e0=e_I, de0=dot_e_I, syst_dynamic=syst_dynamic_in)
     else:
         obs_in = None
 
@@ -150,14 +163,25 @@ if __name__ == '__main__':
         obs_out = ro(k1=np.array([2.0, 2.0, 10.]),
                      k2=np.array([10, 20, 5.]),
                      dim=3,
-                     dt=uav.dt, )
+                     dt=uav.dt)
+    elif OBSERVER_OUT == 'rd3':
+        obs_out = rd3(m1=11 * np.ones(3),
+                      m2=35 * np.ones(3),
+                      m3=25 * np.ones(3),
+                      n1=3 * np.ones(3),
+                      n2=3 * np.ones(3),
+                      n3=3 * np.ones(3),
+                      dim=3,
+                      dt=uav.dt)
+        syst_dynamic_out = -uav.kt / uav.m * uav.dot_eta() + uav.A()
+        obs_out.set_init(e0=uav.eta(), de0=uav.dot_eta(), syst_dynamic=syst_dynamic_out)
     else:
         obs_out = None
 
     '''嗨嗨嗨，开始控制了'''
     while uav.time < uav.time_max - uav.dt / 2:
-        if uav.n % 1000 == 0:
-            print('time: ', uav.n * uav.dt)
+        if uav.n % int(1 / param.dt) == 0:
+            print('time: %.2f s.' % (uav.n / int(1 / param.dt)))
 
         '''1. generate reference command and uncertainty'''
         ref, dot_ref, dot2_ref, dot3_ref = ref_uav(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)  # 整体参考信号 xd yd zd psid
@@ -187,6 +211,9 @@ if __name__ == '__main__':
         elif OBSERVER_OUT == 'ro':
             syst_dynamic = -uav.kt / uav.m * uav.dot_eta() + uav.A()
             obs_o, _ = obs_out.observe(syst_dynamic=syst_dynamic, de=uav.eta())
+        elif OBSERVER_OUT == 'rd3':
+            syst_dynamic = -uav.kt / uav.m * uav.dot_eta() + uav.A()
+            obs_o, _ = obs_out.observe(e=uav.eta(), syst_dynamic=syst_dynamic)
         else:
             obs_o = np.zeros(3)
         # obs_o = np.array([0., 0., 0.])
@@ -230,6 +257,9 @@ if __name__ == '__main__':
         elif OBSERVER_IN == 'ro':
             syst_dynamic = np.dot(uav.dot_f1(), uav.rho2()) + np.dot(uav.f1(), uav.f2()) + np.dot(uav.f1(), np.dot(uav.h(), ctrl_in.control))
             obs_I, _ = obs_in.observe(syst_dynamic=syst_dynamic, de=dot_e_I)
+        elif OBSERVER_IN == 'rd3':
+            syst_dynamic = np.dot(uav.dot_f1(), uav.rho2()) + np.dot(uav.f1(), uav.f2()) + np.dot(uav.f1(), np.dot(uav.h(), ctrl_in.control))
+            obs_I, _ = obs_in.observe(e=e_I, syst_dynamic=syst_dynamic)
         else:
             obs_I = np.zeros(3)
 
