@@ -76,10 +76,10 @@ class UAV:
         '''datasave'''
 
         '''other'''
-        self.f1g_old: np.ndarray = np.dot(self.f1(), self.h())
-        self.f1g_new: np.ndarray = np.dot(self.f1(), self.h())
-        self.Frho2_f1f2_old: np.ndarray = np.dot(self.dot_f1(), self.rho2()) + np.dot(self.f1(), self.f2())
-        self.Frho2_f1f2_new: np.ndarray = np.dot(self.dot_f1(), self.rho2()) + np.dot(self.f1(), self.f2())
+        self.f1g_old: np.ndarray = np.dot(self.W(), self.J_inv())
+        self.f1g_new: np.ndarray = np.dot(self.W(), self.J_inv())
+        self.Frho2_f1f2_old: np.ndarray = np.dot(self.dW(), self.rho2()) + np.dot(self.W(), self.f2())
+        self.Frho2_f1f2_new: np.ndarray = np.dot(self.dW(), self.rho2()) + np.dot(self.W(), self.f2())
         '''other'''
 
     def ode(self, xx: np.ndarray, dis: np.ndarray):
@@ -174,8 +174,8 @@ class UAV:
         self.n += 1  # 拍数 +1
 
         '''需要求导的变量更新'''
-        self.f1g_new = np.dot(self.f1(), self.h())
-        self.Frho2_f1f2_new = np.dot(self.dot_f1(), self.rho2()) + np.dot(self.f1(), self.f2())
+        self.f1g_new = np.dot(self.W(), self.J_inv())
+        self.Frho2_f1f2_new = np.dot(self.dW(), self.rho2()) + np.dot(self.W(), self.f2())
         '''需要求导的变量更新'''
 
     def uav_state_call_back(self):
@@ -202,11 +202,11 @@ class UAV:
     def set_state(self, xx: np.ndarray):
         [self.x, self.y, self.z, self.vx, self.vy, self.vz, self.phi, self.theta, self.psi, self.p, self.q, self.r] = xx[:]
 
-    def f1(self):
+    def W(self):
         """
         :brief:  [1  sin(phi)tan(theta)      cos(phi)tan(theta)]
                  [0       cos(phi)               -sin(phi)     ]
-                 [0  sin(phi)/cos(theta)   -cos(phi)/cos(theta)]
+                 [0  sin(phi)/cos(theta)    cos(phi)/cos(theta)]
         :return: f1(rho_1)
         """
         _f1_rho1 = np.zeros((3, 3)).astype(float)
@@ -232,11 +232,11 @@ class UAV:
         _f2_rho2[2] = (self.kr * self.r + self.p * self.q * (self.J[0] - self.J[1])) / self.J[2]
         return _f2_rho2
 
-    def h(self):
+    def J_inv(self):
         """
-        :brief:  [        0             1/Jxx    0       0 ]
-                 [        0               0    1/Jyy     0 ]
-                 [        0               0      0    1/Jzz]
+        :brief:  [1/Jxx    0       0 ]
+                 [  0    1/Jyy     0 ]
+                 [  0      0    1/Jzz]
         :return: h(rho_1)
         """
         _g = np.zeros((3, 3)).astype(float)
@@ -245,6 +245,12 @@ class UAV:
         _g[2][2] = 1 / self.J[2]
         return _g
 
+    def f_rho(self):
+        """
+        :return:
+        """
+        return -np.dot(self.J_inv(), self.f2())
+
     def rho1(self):
         return np.array([self.phi, self.theta, self.psi])
 
@@ -252,14 +258,14 @@ class UAV:
         return np.array([self.p, self.q, self.r])
 
     def dot_rho1(self):
-        return np.dot(self.f1(), self.rho2())
+        return np.dot(self.W(), self.rho2())
 
     def dot_rho2(self, uncertainty: np.ndarray):
         # Fdx, Fdy, Fdz, dp, dq, dr
         dp, dq, dr = uncertainty[3], uncertainty[4], uncertainty[5]
-        return self.f2() + np.dot(self.h(), self.torque) + np.array([dp, dq, dr])
+        return self.f2() + np.dot(self.J_inv(), self.torque) + np.array([dp, dq, dr])
 
-    def dot_f1(self):
+    def dW(self):
         dot_rho1 = self.dot_rho1()  # dphi dtheta dpsi
         _dot_f1_rho1 = np.zeros((3, 3)).astype(float)
         _dot_f1_rho1[0][1] = dot_rho1[0] * np.tan(self.theta) * np.cos(self.phi) + dot_rho1[1] * np.sin(self.phi) / np.cos(self.theta) ** 2
@@ -291,3 +297,9 @@ class UAV:
         return self.control[0] / self.m * np.array([C(self.phi) * C(self.psi) * S(self.theta) + S(self.phi) * S(self.psi),
                                                     C(self.phi) * S(self.psi) * S(self.theta) - S(self.phi) * C(self.psi),
                                                     C(self.phi) * C(self.theta)]) - np.array([0., 0., self.g])
+
+    def A_rho(self):
+        return np.dot(self.dW(), self.rho2()) + np.dot(self.W(), self.f_rho())
+
+    def B_rho(self):
+        return np.dot(self.W(), self.J_inv())

@@ -2,16 +2,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-def sig(x, a):
-    return np.fabs(x)**a* np.sign(x)
-
 if __name__ == '__main__':
-    x = np.linspace(1, 5, 100)
-    a = 3 / 4
-    b = 5 / 4
-    y1 = sig(x, a)
-    y2 = sig(x, b)
-    plt.figure()
-    plt.plot(x, np.fabs(y1), 'red')
-    plt.plot(x, np.fabs(y2), 'blue')
-    plt.show()
+    rmb = 10962.8 + 4533.34 + 3116.35 + 4651.35 + 4886.64 + 4445.76
+    hkd = 12693.44
+    total_hkd = rmb / 0.92 + 12693.44
+    print(total_hkd)
+    print(80000 - total_hkd)
