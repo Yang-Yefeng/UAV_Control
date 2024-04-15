@@ -1,50 +1,65 @@
-import datetime
 import os
 import sys
-
-import matplotlib.pyplot as plt
+import datetime
+import time
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
 
 from observer.RobustDifferentatior_3rd import robust_differentiator_3rd as rd3
-from controller.BackStepping import backstepping
+from controller.FNTSMC import fntsmc, fntsmc_param
 from uav.uav import UAV, uav_param
 from utils.ref_cmd import *
 from utils.collector import data_collector
 
-IS_IDEAL = True
-observer_pool = ['rd3', 'none']
-# neso: 非线性扩张状态观测器
-# hsmo: 高阶滑模观测器
-# afto: 固定时间观测器
-# ro:   龙贝格 (勒贝格) 观测器
-# rd3:  三阶鲁棒微分器
-# none: 没观测器
-OBSERVER = observer_pool[1]
 
 '''Parameter list of the quadrotor'''
-param = uav_param()
-param.m = 0.8
-param.g = 9.8
-param.J = np.array([4.212e-3, 4.212e-3, 8.255e-3])
-param.d = 0.12
-param.CT = 2.168e-6
-param.CM = 2.136e-8
-param.J0 = 1.01e-5
-param.kr = 1e-3
-param.kt = 1e-3
-param.pos0 = np.array([0, 0, 0])
-param.vel0 = np.array([0, 0, 0])
-param.angle0 = np.array([0, 0, 0])
-param.pqr0 = np.array([0, 0, 0])
-param.dt = 1e-3
-param.time_max = 20
+DT = 0.001
+uav_param = uav_param()
+uav_param.m = 0.8
+uav_param.g = 9.8
+uav_param.J = np.array([4.212e-3, 4.212e-3, 8.255e-3])
+uav_param.d = 0.12
+uav_param.CT = 2.168e-6
+uav_param.CM = 2.136e-8
+uav_param.J0 = 1.01e-5
+uav_param.kr = 1e-3
+uav_param.kt = 1e-3
+uav_param.pos0 = np.array([0, 0, 0])
+uav_param.vel0 = np.array([0, 0, 0])
+uav_param.angle0 = np.array([0, 0, 0])
+uav_param.pqr0 = np.array([0, 0, 0])
+uav_param.dt = DT
+uav_param.time_max = 20
 '''Parameter list of the quadrotor'''
+
+
+'''Parameter list of the attitude controller'''
+att_ctrl_param = fntsmc_param()
+att_ctrl_param.k1 = np.array([25, 25, 40])
+att_ctrl_param.k2 = np.array([0.1, 0.1, 0.2])
+att_ctrl_param.k3 = np.array([0.05, 0.05, 0.05])
+att_ctrl_param.alpha = np.array([2.5, 2.5, 2.5])
+att_ctrl_param.beta = np.array([0.99, 0.99, 0.99])
+att_ctrl_param.gamma = np.array([1.5, 1.5, 1.2])
+att_ctrl_param.lmd = np.array([2.0, 2.0, 2.0])
+att_ctrl_param.dim = 3
+att_ctrl_param.dt = DT
+att_ctrl_param.ctrl0 = np.array([0., 0., 0.])
+att_ctrl_param.saturation = np.array([0.3, 0.3, 0.3])
+'''Parameter list of the attitude controller'''
+
+
+IS_IDEAL = False
+OBSERVER = 'rd3'
+
 
 if __name__ == '__main__':
-    uav = UAV(param)
-    ctrl_in = backstepping(ctrl0=np.array([0, 0, 0]).astype(float), dt=uav.dt, k_bc=np.array([0.2, 0.2, 0.2]))
+    uav = UAV(uav_param)
+    ctrl_in = fntsmc(att_ctrl_param)
 
     ref_amplitude = np.array([np.pi / 3, np.pi / 3, np.pi / 2])
     ref_period = np.array([5, 5, 4])
@@ -59,30 +74,25 @@ if __name__ == '__main__':
         '''
             m 和 n 可以相等，也可以不同。m对应低次，n对应高次。
         '''
-        observer = rd3(m1=11 * np.ones(3),
-                       m2=35 * np.ones(3),
-                       m3=25 * np.ones(3),
-                       n1=3 * np.ones(3),
-                       n2=3 * np.ones(3),
-                       n3=3 * np.ones(3),
-                       dim=3,
+        observer = rd3(use_freq=True,
+                       omega=np.array([3.5, 3.4, 3.9]),
+                       dim= 3,
                        dt=uav.dt)
-        syst_dynamic0 = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(),
-                                                                                                          ctrl_in.control))
+        syst_dynamic0 = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
         observer.set_init(e0=e0, de0=de0, syst_dynamic=syst_dynamic0)
     else:
-        observer = np.zeros(3)
+        observer = None
 
     de = np.array([0, 0, 0]).astype(float)
     data_record = data_collector(N=int(uav.time_max / uav.dt))
 
     while uav.time < uav.time_max:
-        if uav.n % int(1 / param.dt) == 0:
-            print('time: %.2f s.' % (uav.n / int(1 / param.dt)))
+        if uav.n % int(1 / uav.dt) == 0:
+            print('time: %.2f s.' % (uav.n / int(1 / uav.dt)))
+
         '''1. 计算 tk 时刻参考信号 和 生成不确定性'''
         uncertainty = generate_uncertainty(time=uav.time, is_ideal=IS_IDEAL)
-        rhod, dot_rhod, dot2_rhod, dot3_rhod = ref_inner(uav.time, ref_amplitude, ref_period, ref_bias_a,
-                                                         ref_bias_phase)
+        rhod, dot_rhod, dot2_rhod, dot3_rhod = ref_inner(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
         '''1. 计算 tk 时刻参考信号 和 生成不确定性'''
 
         '''2. 计算 tk 时刻误差信号'''
@@ -98,10 +108,21 @@ if __name__ == '__main__':
             delta_obs, dot_delta_obs = np.zeros(3), np.zeros(3)
         '''3. 观测器'''
 
-        e_rho = uav.rho1() - rhod                           # e1
-        de_rho = np.dot(uav.W(), uav.rho2()) - dot_rhod     # de1
+        '''4. 计算控制量'''
+        ctrl_in.control_update2(second_order_att_dynamics=uav.second_order_att_dynamics(),
+                                control_mat=uav.B_rho(),
+                                e=e,
+                                de=de,
+                                dd_ref=dot2_rhod,
+                                obs=delta_obs)
+        '''4. 计算控制量'''
 
+        '''5. 状态更新'''
         action_4_uav = np.array([uav.m * uav.g, ctrl_in.control[0], ctrl_in.control[1], ctrl_in.control[2]])
+        uav.rk44(action=action_4_uav, dis=uncertainty, n=1, att_only=True)
+        '''5. 状态更新'''
+
+        '''6. 数据存储'''
         data_block = {'time': uav.time,
                       'control': action_4_uav,
                       'ref_angle': rhod,
@@ -113,15 +134,7 @@ if __name__ == '__main__':
                       'd_out_obs': np.array([0., 0., 0.]),
                       'state': np.hstack((np.zeros(6), uav.uav_att_pqr_call_back()))}
         data_record.record(data=data_block)
-
-        uav.rk44(action=action_4_uav, dis=uncertainty, n=1, att_only=True)
-        ctrl_in.control_update(e1=e_rho, de1=de_rho, f=uav.second_order_att_dynamics(), g=uav.B_rho(), dd_ref=dot2_rhod, obs=delta_obs)
-
-    SAVE = False
-    if SAVE:
-        new_path = '../datasave/' + datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d-%H-%M-%S') + '/'
-        os.mkdir(new_path)
-        data_record.package2file(new_path)
+        '''6. 数据存储'''
 
     data_record.plot_att()
     data_record.plot_torque()

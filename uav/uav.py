@@ -21,6 +21,23 @@ class uav_param:
         self.dt = 0.001
         self.time_max = 30
 
+    def print_param(self):
+        print('    m   : ', self.m)
+        print('    g   : ', self.g)
+        print('    J   : ', self.J)
+        print('    d   : ', self.d)
+        print('   CT   : ', self.CT)
+        print('   CM   : ', self.CM)
+        print('   J0   : ', self.J0)
+        print('   kr   : ', self.kr)
+        print('   kt   : ', self.kt)
+        print('  pos0  : ', self.pos0)
+        print('  vel0  : ', self.vel0)
+        print(' angle0 : ', self.angle0)
+        print('  pqr0  : ', self.pqr0)
+        print('   dt   : ', self.dt)
+        print('time_max: ', self.time_max)
+
 
 class UAV:
     def __init__(self, param: uav_param):
@@ -298,8 +315,11 @@ class UAV:
                                                     C(self.phi) * S(self.psi) * S(self.theta) - S(self.phi) * C(self.psi),
                                                     C(self.phi) * C(self.theta)]) - np.array([0., 0., self.g])
 
-    def A_rho(self):
-        return np.dot(self.dW(), self.rho2()) + np.dot(self.W(), self.f_rho())
+    def second_order_att_dynamics(self) -> np.ndarray:
+        return np.dot(self.dW(), self.rho2()) + np.dot(self.W(), self.f2())
+
+    # def A_rho(self):
+    #     return np.dot(self.dW(), self.rho2()) + np.dot(self.W(), self.f_rho())
 
     def B_rho(self):
         return np.dot(self.W(), self.J_inv())

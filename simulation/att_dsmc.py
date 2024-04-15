@@ -46,6 +46,7 @@ param.dt = 1e-3
 param.time_max = 20
 '''Parameter list of the quadrotor'''
 
+
 if __name__ == '__main__':
     uav = UAV(param)
     ctrl_in = dsmc(ctrl0=np.array([0, 0, 0]).astype(float), dt=uav.dt)
