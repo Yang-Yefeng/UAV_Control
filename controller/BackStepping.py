@@ -1,32 +1,59 @@
 import numpy as np
 
 
-
 class backstepping:
     def __init__(self,
-                 k_bc: np.ndarray = np.array([1., 1., 1.]),
+                 k_bs1: np.ndarray = np.array([1., 1., 1.]),
+                 k_bs2: np.ndarray = np.array([1., 1., 1.]),
                  dim: int = 3,
                  dt: float = 0.001,
                  ctrl0: np.ndarray = np.array([0., 0., 0.])):
-        self.k_bc = k_bc
+        self.k_bs1 = k_bs1
+        self.k_bs2 = k_bs2
         self.dt = dt
         self.dim = dim
-        self.control = ctrl0
+        self.control_in = ctrl0
+        self.control_out = ctrl0
 
-    def control_update(self, e1:np.ndarray, de1: np.ndarray, f: np.ndarray, g: np.ndarray, dd_ref: np.ndarray, obs: np.ndarray):
+    def Gamma_omega(self, W: np.ndarray, dot_ref: np.ndarray, e_rho: np.ndarray):
+        return np.dot(np.linalg.inv(W), dot_ref - self.k_bs1 * e_rho)
+
+    def Gamma_eta(self, e: np.ndarray):
+        return -self.k_bs1 * e
+
+    def control_update_inner(self,
+                             A_omega: np.ndarray,
+                             B_omega: np.ndarray,
+                             W: np.ndarray,
+                             dot_ref: np.ndarray,
+                             e_rho: np.ndarray,
+                             omega: np.ndarray,
+                             obs: np.ndarray):
         """
-        :param de1:
-        :param e2:
-        :param f:       system dynamics
-        :param g:       control matrix
-        :param dd_ref:  dot dot reference
-        :param obs:     observer
-        :return:        control output
+        :param obs:
+        :param A_omega:     omega 系统动态矩阵
+        :param B_omega:     omega 控制矩阵
+        :param W:           无人机建模中的定义
+        :param dot_ref:     参考轨迹一阶导数
+        :param e_rho:     角度控制误差
+        :param omega:       角速度 p q r
+        :return:
         """
-        if dd_ref is not None:
-            tau_1 = f + self.k_bc * de1 - dd_ref - obs
-        else:
-            tau_1 = f + self.k_bc * de1 - obs
-        e_bs = de1 + self.k_bc *e1
-        tau_2 = -self.k_bc * e_bs
-        self.control = -np.dot(np.linalg.inv(g), tau_1 + tau_2)
+        Gamma = self.Gamma_omega(W, dot_ref, e_rho)
+        tau_1 = -A_omega - obs
+        tau_2 = -np.dot(W.T, e_rho)
+        tau_3 = -self.k_bs2 * (omega - Gamma)
+        self.control_in = np.dot(np.linalg.inv(B_omega), tau_1 + tau_2 + tau_3)
+
+    def control_update_outer(self, A_eta: np.ndarray, e: np.ndarray, dot_e: np.ndarray, obs: np.ndarray):
+        """
+        :param A_eta:
+        :param e:
+        :param dot_e:
+        :param obs:
+        :return:
+        """
+        u1 = -A_eta - obs
+        u2 = -e
+        u3 = -self.k_bs2 * (dot_e - self.Gamma_eta(e))
+        self.control_out = u1 + u2 + u3

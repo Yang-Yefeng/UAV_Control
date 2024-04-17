@@ -78,7 +78,7 @@ if __name__ == '__main__':
                        omega=np.array([3.5, 3.4, 3.9]),
                        dim= 3,
                        dt=uav.dt)
-        syst_dynamic0 = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
+        syst_dynamic0 = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), np.dot(uav.J_inv(), uav.f_rho() + ctrl_in.control))
         observer.set_init(e0=e0, de0=de0, syst_dynamic=syst_dynamic0)
     else:
         observer = None
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         '''3. 观测器'''
 
         '''4. 计算控制量'''
-        ctrl_in.control_update2(second_order_att_dynamics=uav.second_order_att_dynamics(),
+        ctrl_in.control_update2(second_order_att_dynamics=uav.A_rho(),
                                 control_mat=uav.B_rho(),
                                 e=e,
                                 de=de,

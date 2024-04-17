@@ -13,7 +13,7 @@ from uav.uav import UAV, uav_param
 from utils.ref_cmd import *
 from utils.collector import data_collector
 
-IS_IDEAL = True
+IS_IDEAL = False
 observer_pool = ['rd3', 'none']
 # neso: 非线性扩张状态观测器
 # hsmo: 高阶滑模观测器
@@ -21,7 +21,7 @@ observer_pool = ['rd3', 'none']
 # ro:   龙贝格 (勒贝格) 观测器
 # rd3:  三阶鲁棒微分器
 # none: 没观测器
-OBSERVER = observer_pool[1]
+OBSERVER = observer_pool[0]
 
 '''Parameter list of the quadrotor'''
 param = uav_param()
@@ -44,7 +44,11 @@ param.time_max = 20
 
 if __name__ == '__main__':
     uav = UAV(param)
-    ctrl_in = backstepping(ctrl0=np.array([0, 0, 0]).astype(float), dt=uav.dt, k_bc=np.array([0.2, 0.2, 0.2]))
+    ctrl_in = backstepping(k_bs1=np.array([5., 5., 5.]),     # gain for tracking "e_rho"
+                           k_bs2=np.array([40., 40., 40.]),        # gain for tracking "omega - virtual omega_d"
+                           dim=3,
+                           ctrl0=np.array([0, 0, 0]).astype(float),
+                           dt=uav.dt)
 
     ref_amplitude = np.array([np.pi / 3, np.pi / 3, np.pi / 2])
     ref_period = np.array([5, 5, 4])
@@ -59,16 +63,12 @@ if __name__ == '__main__':
         '''
             m 和 n 可以相等，也可以不同。m对应低次，n对应高次。
         '''
-        observer = rd3(m1=11 * np.ones(3),
-                       m2=35 * np.ones(3),
-                       m3=25 * np.ones(3),
-                       n1=3 * np.ones(3),
-                       n2=3 * np.ones(3),
-                       n3=3 * np.ones(3),
+        observer = rd3(use_freq=True,
+                       omega=np.array([3.5, 3.4, 3.9]),
                        dim=3,
                        dt=uav.dt)
         syst_dynamic0 = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(),
-                                                                                                          ctrl_in.control))
+                                                                                                          ctrl_in.control_in))
         observer.set_init(e0=e0, de0=de0, syst_dynamic=syst_dynamic0)
     else:
         observer = np.zeros(3)
@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
         '''3. 观测器'''
         if OBSERVER == 'rd3':
-            syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
+            syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control_in))
             delta_obs, dot_delta_obs = observer.observe(syst_dynamic=syst_dynamic, e=e)
         else:
             delta_obs, dot_delta_obs = np.zeros(3), np.zeros(3)
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         e_rho = uav.rho1() - rhod                           # e1
         de_rho = np.dot(uav.W(), uav.rho2()) - dot_rhod     # de1
 
-        action_4_uav = np.array([uav.m * uav.g, ctrl_in.control[0], ctrl_in.control[1], ctrl_in.control[2]])
+        action_4_uav = np.array([uav.m * uav.g, ctrl_in.control_in[0], ctrl_in.control_in[1], ctrl_in.control_in[2]])
         data_block = {'time': uav.time,
                       'control': action_4_uav,
                       'ref_angle': rhod,
@@ -115,7 +115,13 @@ if __name__ == '__main__':
         data_record.record(data=data_block)
 
         uav.rk44(action=action_4_uav, dis=uncertainty, n=1, att_only=True)
-        ctrl_in.control_update(e1=e_rho, de1=de_rho, f=uav.second_order_att_dynamics(), g=uav.B_rho(), dd_ref=dot2_rhod, obs=delta_obs)
+        ctrl_in.control_update_inner(A_omega=uav.A_omega(),
+                                     B_omega=uav.B_omega(),
+                                     W=uav.W(),
+                                     dot_ref=dot_rhod,
+                                     e_rho=e_rho,
+                                     omega=uav.rho2(),
+                                     obs=delta_obs)
 
     SAVE = False
     if SAVE:

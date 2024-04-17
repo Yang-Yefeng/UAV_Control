@@ -266,7 +266,11 @@ class UAV:
         """
         :return:
         """
-        return -np.dot(self.J_inv(), self.f2())
+        f_rho = np.array([0, 0, 0]).astype(float)
+        f_rho[0] = -self.kr * self.p - self.q * self.r * (self.J[2] - self.J[1])
+        f_rho[1] = -self.kr * self.q - self.p * self.r * (self.J[0] - self.J[2])
+        f_rho[2] = -self.kr * self.r - self.p * self.q * (self.J[1] - self.J[0])
+        return f_rho
 
     def rho1(self):
         return np.array([self.phi, self.theta, self.psi])
@@ -318,8 +322,14 @@ class UAV:
     def second_order_att_dynamics(self) -> np.ndarray:
         return np.dot(self.dW(), self.rho2()) + np.dot(self.W(), self.f2())
 
-    # def A_rho(self):
-    #     return np.dot(self.dW(), self.rho2()) + np.dot(self.W(), self.f_rho())
+    def A_rho(self):
+        return np.dot(self.dW(), self.rho2()) + np.dot(self.W(), np.dot(self.J_inv(), self.f_rho()))
 
     def B_rho(self):
         return np.dot(self.W(), self.J_inv())
+
+    def A_omega(self):
+        return np.dot(self.J_inv(), self.f_rho())
+
+    def B_omega(self):
+        return self.J_inv()
