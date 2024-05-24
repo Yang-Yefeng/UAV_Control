@@ -22,8 +22,8 @@ class robust_differentiator_3rd:
         self.b3 = 7. / 4.
         if use_freq:
             m1n1 = omega[0] + omega[1] + omega[2]
-            m2n2 = omega[0]*omega[1]+omega[0]*omega[2]+omega[1]*omega[2]
-            m3n3 = omega[0]*omega[1]*omega[2]
+            m2n2 = omega[0] * omega[1] + omega[0] * omega[2] + omega[1] * omega[2]
+            m3n3 = omega[0] * omega[1] * omega[2]
             self.m1 = m1n1 * np.ones(dim)
             self.m2 = m2n2 * np.ones(dim)
             self.m3 = m3n3 * np.ones(dim)
@@ -76,6 +76,7 @@ class robust_differentiator_3rd:
         self.dz1 = self.z2 + self.m1 * self.sig(obs_e, self.a1) + self.n1 * self.sig(obs_e, self.b1)
         self.dz2 = syst_dynamic + self.z3 + self.m2 * self.sig(obs_e, self.a2) + self.n2 * self.sig(obs_e, self.b2)
         self.dz3 = self.m3 * self.sig(obs_e, self.a3) + self.n3 * self.sig(obs_e, self.b3)
+
         self.z1 = self.z1 + self.dz1 * self.dt
         self.z2 = self.z2 + self.dz2 * self.dt
         self.z3 = self.z3 + self.dz3 * self.dt
