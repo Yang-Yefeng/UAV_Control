@@ -200,21 +200,21 @@ if __name__ == '__main__':
         '''3. generate outer-loop virtual control command'''
         if OBSERVER_OUT == 'neso':
             syst_dynamic = -uav.kt / uav.m * uav.dot_eta() + uav.A()
-            obs_o, _ = obs_out.observe(x=uav.eta(), syst_dynamic=syst_dynamic)
+            _, _, obs_o = obs_out.observe(x=uav.eta(), syst_dynamic=syst_dynamic)
         elif OBSERVER_OUT == 'hsmo':
             syst_dynamic = -uav.kt / uav.m * uav.dot_eta() + uav.A()
-            obs_o, _ = obs_out.observe(de=dot_e_o, syst_dynamic=syst_dynamic)
+            _, _, obs_o = obs_out.observe(de=dot_e_o, syst_dynamic=syst_dynamic)
         elif OBSERVER_OUT == 'afto':
             syst_dynamic = -uav.kt / uav.m * uav.dot_eta() + uav.A()
-            obs_o, _ = obs_out.observe(syst_dynamic=syst_dynamic,
-                                       dot_e_old=dot_e_o_old,
-                                       dot_e=dot_e_o)
+            _, _, obs_o = obs_out.observe(syst_dynamic=syst_dynamic,
+                                          dot_e_old=dot_e_o_old,
+                                          dot_e=dot_e_o)
         elif OBSERVER_OUT == 'ro':
             syst_dynamic = -uav.kt / uav.m * uav.dot_eta() + uav.A()
-            obs_o, _ = obs_out.observe(syst_dynamic=syst_dynamic, de=uav.eta())
+            _, _, obs_o = obs_out.observe(syst_dynamic=syst_dynamic, de=uav.eta())
         elif OBSERVER_OUT == 'rd3':
             syst_dynamic = -uav.kt / uav.m * uav.dot_eta() + uav.A()
-            obs_o, _ = obs_out.observe(e=uav.eta(), syst_dynamic=syst_dynamic)
+            _, _, obs_o = obs_out.observe(e=uav.eta(), syst_dynamic=syst_dynamic)
         else:
             obs_o = np.zeros(3)
         # obs_o = np.array([0., 0., 0.])
@@ -246,27 +246,27 @@ if __name__ == '__main__':
 
         if OBSERVER_IN == 'neso':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
-            obs_I, _ = obs_in.observe(x=e_I, syst_dynamic=syst_dynamic)
+            _, _, obs_I = obs_in.observe(x=e_I, syst_dynamic=syst_dynamic)
         elif OBSERVER_IN == 'hsmo':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
-            obs_I, _ = obs_in.observe(syst_dynamic=syst_dynamic, de=dot_e_I)
+            _, _, obs_I = obs_in.observe(syst_dynamic=syst_dynamic, de=dot_e_I)
         elif OBSERVER_IN == 'afto':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
-            obs_I, _ = obs_in.observe(syst_dynamic=syst_dynamic,
-                                      dot_e_old=dot_e_I_old,
-                                      dot_e=dot_e_I)
+            _, _, obs_I = obs_in.observe(syst_dynamic=syst_dynamic,
+                                         dot_e_old=dot_e_I_old,
+                                         dot_e=dot_e_I)
         elif OBSERVER_IN == 'ro':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
-            obs_I, _ = obs_in.observe(syst_dynamic=syst_dynamic, de=dot_e_I)
+            _, _, obs_I = obs_in.observe(syst_dynamic=syst_dynamic, de=dot_e_I)
         elif OBSERVER_IN == 'rd3':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
-            obs_I, _ = obs_in.observe(e=e_I, syst_dynamic=syst_dynamic)
+            _, _, obs_I = obs_in.observe(e=e_I, syst_dynamic=syst_dynamic)
         else:
             obs_I = np.zeros(3)
 
             # TODO 双闭环时，内环的模型不确定性反映在整个系统中是一个高频信号，这种信号已经不再适合用观测器，故而直接将观测器输出前两维度置为 0 即可
-            obs_rho[0] = 0.
-            obs_rho[1] = 0.
+            obs_I[0] = 0.
+            obs_I[1] = 0.
             # TODO 双闭环时，内环的模型不确定性反映在整个系统中是一个高频信号，这种信号已经不再适合用观测器，故而直接将观测器输出前两维度置为 0 即可
 
         dot2_e_I = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2() + np.dot(uav.J_inv(), ctrl_in.control)) + obs_I

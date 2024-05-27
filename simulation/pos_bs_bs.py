@@ -121,7 +121,7 @@ if __name__ == '__main__':
         '''3. generate outer-loop virtual control command'''
         if OBSERVER_OUT == 'rd3':
             syst_dynamic = -uav.kt / uav.m * uav.dot_eta() + uav.A()
-            obs_eta, _ = obs_out.observe(e=uav.eta(), syst_dynamic=syst_dynamic)
+            _, _, obs_eta = obs_out.observe(e=uav.eta(), syst_dynamic=syst_dynamic)
         else:
             obs_eta = np.zeros(3)
 
@@ -144,7 +144,7 @@ if __name__ == '__main__':
 
         if OBSERVER_IN == 'rd3':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control_in))
-            obs_rho, _ = observer.observe(syst_dynamic=syst_dynamic, e=e_rho)
+            _, _, obs_rho = observer.observe(syst_dynamic=syst_dynamic, e=e_rho)
         else:
             obs_rho = np.zeros(3)
 

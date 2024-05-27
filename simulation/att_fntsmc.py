@@ -76,7 +76,7 @@ if __name__ == '__main__':
         '''
         observer = rd3(use_freq=True,
                        omega=np.array([3.5, 3.4, 3.9]),
-                       dim= 3,
+                       dim=3,
                        dt=uav.dt)
         syst_dynamic0 = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), np.dot(uav.J_inv(), uav.f_rho() + ctrl_in.control))
         observer.set_init(e0=e0, de0=de0, syst_dynamic=syst_dynamic0)
@@ -103,9 +103,9 @@ if __name__ == '__main__':
         '''3. 观测器'''
         if OBSERVER == 'rd3':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
-            delta_obs, dot_delta_obs = observer.observe(syst_dynamic=syst_dynamic, e=e)
+            _, _, delta_obs = observer.observe(syst_dynamic=syst_dynamic, e=e)
         else:
-            delta_obs, dot_delta_obs = np.zeros(3), np.zeros(3)
+            delta_obs = np.zeros(3)
         '''3. 观测器'''
 
         '''4. 计算控制量'''

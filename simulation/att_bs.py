@@ -93,9 +93,9 @@ if __name__ == '__main__':
         '''3. 观测器'''
         if OBSERVER == 'rd3':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control_in))
-            delta_obs, dot_delta_obs = observer.observe(syst_dynamic=syst_dynamic, e=e)
+            _, _, delta_obs = observer.observe(syst_dynamic=syst_dynamic, e=e)
         else:
-            delta_obs, dot_delta_obs = np.zeros(3), np.zeros(3)
+            delta_obs = np.zeros(3)
         '''3. 观测器'''
 
         e_rho = uav.rho1() - rhod                           # e1

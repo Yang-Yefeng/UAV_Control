@@ -46,7 +46,6 @@ param.dt = 1e-3
 param.time_max = 20
 '''Parameter list of the quadrotor'''
 
-
 if __name__ == '__main__':
     uav = UAV(param)
     ctrl_in = dsmc(ctrl0=np.array([0, 0, 0]).astype(float), dt=uav.dt)
@@ -134,23 +133,23 @@ if __name__ == '__main__':
 
         if OBSERVER == 'neso':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
-            delta_obs, dot_delta_obs = observer.observe(x=e, syst_dynamic=syst_dynamic)
+            _, _, delta_obs = observer.observe(x=e, syst_dynamic=syst_dynamic)
         elif OBSERVER == 'hsmo':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
-            delta_obs, dot_delta_obs = observer.observe(syst_dynamic=syst_dynamic, de=de)
+            _, _, delta_obs = observer.observe(syst_dynamic=syst_dynamic, de=de)
         elif OBSERVER == 'afto':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
-            delta_obs, dot_delta_obs = observer.observe(syst_dynamic=syst_dynamic,
-                                                        dot_e_old=de_old,
-                                                        dot_e=de)
+            _, _, delta_obs = observer.observe(syst_dynamic=syst_dynamic,
+                                               dot_e_old=de_old,
+                                               dot_e=de)
         elif OBSERVER == 'ro':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
-            delta_obs, dot_delta_obs = observer.observe(syst_dynamic=syst_dynamic, de=de)
+            _, _, delta_obs = observer.observe(syst_dynamic=syst_dynamic, de=de)
         elif OBSERVER == 'rd3':
             syst_dynamic = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(), ctrl_in.control))
-            delta_obs, dot_delta_obs = observer.observe(syst_dynamic=syst_dynamic, e=e)
+            _, _, delta_obs = observer.observe(syst_dynamic=syst_dynamic, e=e)
         else:
-            delta_obs, dot_delta_obs = np.zeros(3), np.zeros(3)
+            delta_obs = np.zeros(3)
 
         if IS_IDEAL:
             dde = np.dot(uav.dW(), uav.rho2()) + \
