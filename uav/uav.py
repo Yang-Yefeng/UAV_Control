@@ -322,6 +322,9 @@ class UAV:
     def second_order_att_dynamics(self) -> np.ndarray:
         return np.dot(self.dW(), self.rho2()) + np.dot(self.W(), self.f2())
 
+    def omega(self):
+        return self.rho2()
+
     def A_rho(self):
         return np.dot(self.dW(), self.rho2()) + np.dot(self.W(), np.dot(self.J_inv(), self.f_rho()))
 
