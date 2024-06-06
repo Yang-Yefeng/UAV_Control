@@ -1,7 +1,8 @@
-import os
-import datetime
+import os, sys, datetime
 import matplotlib.pyplot as plt
 import numpy as np
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 
 from controller.BackStepping import backstepping
 from observer.RobustDifferentatior_3rd import robust_differentiator_3rd as rd3
@@ -10,7 +11,7 @@ from utils.ref_cmd import *
 from utils.utils import *
 from utils.collector import data_collector
 
-IS_IDEAL = True
+IS_IDEAL = False
 observer_pool = ['rd3', 'none']
 # neso: 非线性扩张状态观测器
 # hsmo: 高阶滑模观测器
@@ -18,8 +19,8 @@ observer_pool = ['rd3', 'none']
 # ro:   龙贝格 (勒贝格) 观测器
 # rd3:  三阶鲁棒微分器
 # none: 没观测器
-OBSERVER_IN = observer_pool[1]
-OBSERVER_OUT = observer_pool[1]
+OBSERVER_IN = observer_pool[0]
+OBSERVER_OUT = observer_pool[0]
 
 '''Parameter list of the quadrotor'''
 param = uav_param()
@@ -86,6 +87,7 @@ if __name__ == '__main__':
         observer = rd3(use_freq=True,
                        omega=np.array([3.5, 3.4, 3.9]),
                        dim=3,
+                       thresh=np.array([0.1, 0.1, 0.1]),
                        dt=uav.dt)
         syst_dynamic0 = np.dot(uav.dW(), uav.rho2()) + np.dot(uav.W(), uav.f2()) + np.dot(uav.W(), np.dot(uav.J_inv(),
                                                                                                           ctrl_in.control_in))
@@ -95,8 +97,9 @@ if __name__ == '__main__':
 
     if OBSERVER_OUT == 'rd3':
         obs_out = rd3(use_freq=True,
-                      omega=np.array([0.9, 0.9, 0.9]),
+                      omega=np.array([4, 4, 4]),
                       dim=3,
+                      thresh=np.array([0.5, 0.5, 0.5]),
                       dt=uav.dt)
 
         syst_dynamic_out = -uav.kt / uav.m * uav.dot_eta() + uav.A()
