@@ -27,15 +27,24 @@ def S(x):
     return np.sin(x)
 
 
-def uo_2_ref_angle_throttle(uo: np.ndarray, att: np.ndarray, m: float, g: float):
+def uo_2_ref_angle_throttle(uo: np.ndarray, att: np.ndarray, m: float, g: float, dt=0.01, att_max=np.pi/3, dot_att_max=np.pi/2):
     # print('fuck', uf)
     ux = uo[0]
     uy = uo[1]
     uz = uo[2]
     uf = (uz + g) * m / (C(att[0]) * C(att[1]))
+    
     asin_phi_d = min(max((ux * np.sin(att[2]) - uy * np.cos(att[2])) * m / uf, -1), 1)
     phi_d = np.arcsin(asin_phi_d)
+    
+    if att_max is not None:
+        phi_d = np.clip(phi_d, -att_max, att_max)
+    
     asin_theta_d = min(max((ux * np.cos(att[2]) + uy * np.sin(att[2])) * m / (uf * np.cos(phi_d)), -1), 1)
     theta_d = np.arcsin(asin_theta_d)
+    
+    if att_max is not None:
+        theta_d = np.clip(theta_d, -att_max, att_max)
+    
     # print(phi_d * 180 / np.pi, theta_d * 180 / np.pi)
     return phi_d, theta_d, uf
