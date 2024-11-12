@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Union
+import pandas as pd
 
 
 class lk_obs:
@@ -95,3 +96,14 @@ class lk_obs:
         '''datasave'''
         
         return self.delta
+
+    def save_adap_obs_param(self, path: str, flag: str = 'pos'):
+        pd.DataFrame(np.hstack((self.rec_t, self.rec_xi, self.rec_d_var_theta, self.rec_var_theta, self.rec_d_sigma, self.rec_sigma, self.rec_delta)),
+                     columns=['time',
+                              'xi_x', 'xi_y', 'xi_z',
+                              'd_var_theta_x', 'd_var_theta_y', 'd_var_theta_z',
+                              'var_theta_x', 'var_theta_y', 'var_theta_z',
+                              'd_sigma_x', 'd_sigma_y', 'd_sigma_z',
+                              'sigma_x', 'sigma_y', 'sigma_z',
+                              'delta_x', 'delta_y', 'delta_z']). \
+            to_csv(path + flag + '_adap_obs_param.csv', sep=',', index=False)

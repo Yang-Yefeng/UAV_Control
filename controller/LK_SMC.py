@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 
 class lk_smc_param:
@@ -164,3 +165,10 @@ class lk_smc:
         self.rec_d_delta = np.append(self.rec_d_delta, [self.d_delta], axis=0)  # 添加整行元素，axis=1添加整列元素
         self.rec_delta = np.append(self.rec_delta, [self.delta], axis=0)
         self.index += 1
+
+    def save_ctrl_adaptive(self, path:str, flag:str):
+        pd.DataFrame(np.hstack((self.rec_t, self.rec_d_delta, self.rec_delta)),
+                     columns=['time',
+                              'd_delta_roll', 'd_delta_pitch', 'd_delta_yaw',
+                              'delta_roll', 'delta_pitch', 'delta_yaw']). \
+            to_csv(path + flag + '_ctrl_adaptive.csv', sep=',', index=False)

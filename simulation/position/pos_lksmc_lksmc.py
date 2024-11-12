@@ -215,25 +215,9 @@ if __name__ == '__main__':
     '''datasave'''
     os.mkdir(new_path)
     data_record.package2file(new_path)
-    pd.DataFrame(np.hstack((obs_out.rec_t, obs_out.rec_xi, obs_out.rec_d_var_theta, obs_out.rec_var_theta, obs_out.rec_d_sigma, obs_out.rec_sigma, obs_out.rec_delta)),
-                 columns=['time',
-                          'xi_x', 'xi_y', 'xi_z',
-                          'd_var_theta_x', 'd_var_theta_y', 'd_var_theta_z',
-                          'var_theta_x', 'var_theta_y', 'var_theta_z',
-                          'd_sigma_x', 'd_sigma_y', 'd_sigma_z',
-                          'sigma_x', 'sigma_y', 'sigma_z',
-                          'delta_x', 'delta_y', 'delta_z']). \
-        to_csv(new_path + 'pos_obs_param.csv', sep=',', index=False)
-    pd.DataFrame(np.hstack((ctrl_in.rec_t, ctrl_in.rec_d_delta, ctrl_in.rec_delta)),
-                 columns=['time',
-                          'd_delta_roll', 'd_delta_pitch', 'd_delta_yaw',
-                          'delta_roll', 'delta_pitch', 'delta_yaw']). \
-        to_csv(new_path + 'att_ctrl_adaptive.csv', sep=',', index=False)
-    pd.DataFrame(np.hstack((ctrl_out.rec_t, ctrl_out.rec_d_delta, ctrl_out.rec_delta)),
-                 columns=['time',
-                          'd_delta_x', 'd_delta_y', 'd_delta_z',
-                          'delta_x', 'delta_y', 'delta_z']). \
-        to_csv(new_path + 'pos_ctrl_adaptive.csv', sep=',', index=False)
+    obs_out.save_adap_obs_param(new_path, flag='pos')
+    ctrl_in.save_ctrl_adaptive(new_path, flag='att')
+    ctrl_out.save_ctrl_adaptive(new_path, flag='pos')
     '''datasave'''
     
     data_record.plot_att()
