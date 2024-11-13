@@ -169,6 +169,6 @@ class lk_smc:
     def save_ctrl_adaptive(self, path:str, flag:str):
         pd.DataFrame(np.hstack((self.rec_t, self.rec_d_delta, self.rec_delta)),
                      columns=['time',
-                              'd_delta_roll', 'd_delta_pitch', 'd_delta_yaw',
-                              'delta_roll', 'delta_pitch', 'delta_yaw']). \
+                              'd_delta_x', 'd_delta_y', 'd_delta_z',
+                              'delta_x', 'delta_y', 'delta_z']). \
             to_csv(path + flag + '_ctrl_adaptive.csv', sep=',', index=False)
