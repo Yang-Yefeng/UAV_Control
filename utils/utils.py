@@ -27,8 +27,7 @@ def S(x):
     return np.sin(x)
 
 
-def uo_2_ref_angle_throttle(uo: np.ndarray, att: np.ndarray, m: float, g: float, dt=0.01, att_max=np.pi/3, dot_att_max=np.pi/2):
-    # print('fuck', uf)
+def uo_2_ref_angle_throttle(uo: np.ndarray, att: np.ndarray, m: float, g: float, att_max=np.pi/3, dot_att_max=np.pi/2):
     ux = uo[0]
     uy = uo[1]
     uz = uo[2]

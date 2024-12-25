@@ -53,8 +53,7 @@ def ref_uav(time: float, amplitude: np.ndarray, period: np.ndarray, bias_a: np.n
     #     _r=np.ones_like(amplitude)
     return _r, _dr, _ddr, _dddr
 
-
-def generate_uncertainty(time: float, is_ideal: bool = False) -> np.ndarray:
+def generate_uncertainty(time: float, is_ideal: bool = False, att: bool = False) -> np.ndarray:
     """
     :param time:        time
     :param is_ideal:    ideal or not
@@ -63,37 +62,70 @@ def generate_uncertainty(time: float, is_ideal: bool = False) -> np.ndarray:
     if is_ideal:
         return np.array([0, 0, 0, 0, 0, 0]).astype(float)
     else:
-        T = 2
+        # T = 5
+        # w = 2 * np.pi / T
+        # phi0 = 0.
+        # if time <= 5:
+        #     phi0 = 0.
+        #     Fdx = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(3 * w * time + phi0) + 0.2
+        #     Fdy = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(3 * w * time + phi0) + 0.4
+        #     Fdz = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(3 * w * time + phi0) - 0.5
+        #     dp = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(w * time + phi0)
+        #     dq = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
+        #     dr = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
+        # elif 5 < time <= 10:
+        #     Fdx = 1.5
+        #     Fdy = 0.4 * (time - 5.0)
+        #     Fdz = -0.6
+        #     dp = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(w * time + phi0)
+        #     dq = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
+        #     dr = 0.5
+        # else:
+        #     phi0 = np.pi / 2
+        #     Fdx = 0.5 * np.sin(w * time + phi0) - 1.0 * np.cos(3 * w + time + phi0)
+        #     Fdy = 0.5 * np.cos(w * time + phi0) - 1.0 * np.sin(3 * w + time + phi0) + 1.0
+        #     Fdz = 0.5 * np.sin(w * time + phi0) - 1.0 * np.cos(3 * w + time + phi0) - 0.4
+        #     dp = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(w * time + phi0)
+        #     dq = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
+        #     dr = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
+
+        T = 5
         w = 2 * np.pi / T
         phi0 = 0.
-        if time <= 5:
-            phi0 = 0.
-            Fdx = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(3 * w * time + phi0) + 0.2
-            Fdy = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(3 * w * time + phi0) + 0.4
-            Fdz = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(3 * w * time + phi0) - 0.5
-            dp = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(w * time + phi0)
-            dq = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
-            dr = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
-        elif 5 < time <= 10:
-            Fdx = 1.5
-            Fdy = 0.4 * (time - 5.0)
-            Fdz = -0.6
-            dp = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(w * time + phi0)
-            dq = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
-            dr = 0.5
+        if time < 10:
+            Fdx = 0.5 * np.sin(w * time + phi0) + 1.5 * np.cos(0.5 * w * time + phi0)
+            Fdy = 1 * np.sin(w * time + phi0) + 0.5 * np.cos(0.5 * w * time + phi0)
+            Fdz = 1.5 * np.sin(w * time + phi0) - 2 * np.cos(0.5 * w * time + phi0)
+            dp = 2 * np.sin(w * time + phi0) + 2.5 * np.cos(0.5 * w * time + phi0)
+            dq = 1 * np.sin(w * time + phi0) + 2.5 * np.cos(0.5 * w * time + phi0)
+            dr = 1.5 * np.sin(w * time + phi0) - 2 * np.cos(0.5 * w * time + phi0)
+        elif 10 <= time < 20:
+            Fdx = 1 * np.sin(np.sin(w * (time - 10) + phi0))
+            Fdy = 2 * np.sin(np.cos(w * (time - 10) + phi0))
+            Fdz = 1.5 * np.cos(np.sin(w * (time - 10) + phi0))
+            dp = 1.5 * np.sin(np.sin(w * (time - 10) + phi0))
+            dq = 1.7 * np.sin(np.cos(w * (time - 10) + phi0))
+            dr = 2.5 * np.cos(np.sin(w * (time - 10) + phi0))
+        elif 20 <= time < 30:
+            Fdx = 3.2
+            Fdy = 2.0
+            Fdz = 0.0
+            dp = 0.0
+            dq = 1.5
+            dr = -1.0
+        elif 30 <= time < 40:
+            Fdx = np.sqrt(time - 30) + 1.5 * np.cos(np.sin(np.pi * (time - 30)))
+            Fdy = 0.5 * np.sqrt(time - 30) + 0.5 * np.cos(np.sin(np.pi * (time - 30)))
+            Fdz = 1.5 * np.sqrt(time - 30) - 1.0 * np.cos(np.sin(np.pi * (time - 30)))
+            dp = np.sqrt(time - 30) + 1.5 * np.cos(np.sin(np.pi * (time - 30)))
+            dq = 0.5 * np.sqrt(time - 30) + 0.5 * np.cos(1.5 * np.sin(np.pi * (time - 30)))
+            dr = 1.5 * np.sqrt(time - 30) - 1.0 * np.cos(0.5 * np.sin(np.pi * (time - 30)))
         else:
-            phi0 = np.pi / 2
-            Fdx = 0.5 * np.sin(w * time + phi0) - 1.0 * np.cos(3 * w + time + phi0)
-            Fdy = 0.5 * np.cos(w * time + phi0) - 1.0 * np.sin(3 * w + time + phi0) + 1.0
-            Fdz = 0.5 * np.sin(w * time + phi0) - 1.0 * np.cos(3 * w + time + phi0) - 0.4
-            dp = 0.5 * np.sin(w * time + phi0) + 0.2 * np.cos(w * time + phi0)
-            dq = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
-            dr = 0.5 * np.cos(w * time + phi0) + 0.2 * np.sin(w * time + phi0)
+            Fdx = 0.
+            Fdy = -1.
+            Fdz = 2.
+            dp = 0.5
+            dq = 0.0
+            dr = 1.0
 
-        # Fdx = 0.5 * np.sin(0.8 * np.pi * time) + 0.2 * np.cos(0.4 * np.pi * time)
-        # Fdy = 0.5 * np.cos(0.8 * np.pi * time) + 0.2 * np.sin(0.4 * np.pi * time)
-        # Fdz = 0.5 * np.sin(0.8 * np.pi * time) + 0.2 * np.cos(0.4 * np.pi * time)
-        # dp = 0.5 * np.sin(0.4 * np.pi * time) + 0.2 * np.cos(0.8 * np.pi * time)
-        # dq = 0.5 * np.cos(0.4 * np.pi * time) + 0.2 * np.sin(0.8 * np.pi * time)
-        # dr = 0.5 * np.cos(0.4 * np.pi * time) + 0.2 * np.sin(0.8 * np.pi * time)
-        return np.array([Fdx, Fdy, Fdz, dp, dq, dr])
+        return np.array([0., 0., 0., dp, dq, dr]) if att else np.array([Fdx, Fdy, Fdz, 0., 0., 0.])

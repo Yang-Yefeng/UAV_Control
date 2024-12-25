@@ -149,8 +149,8 @@ class data_collector:
         plt.plot(self.t, self.ref_angle[:, 2] * 180 / np.pi, 'red')
         plt.plot(self.t, self.state[:, 8] * 180 / np.pi, 'blue')
         plt.grid(True)
-        plt.ylim((-100, 100))
-        plt.yticks(np.arange(-100, 100, 10))
+        plt.ylim((-150, 150))
+        plt.yticks(np.arange(-150, 150, 30))
         plt.xlabel('time(s)')
         plt.title('yaw-psi')
 

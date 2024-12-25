@@ -75,14 +75,14 @@ class lk_smc:
     def sig(x, a, kt=5):
         return np.fabs(x) ** a * np.tanh(kt * x)
     
-    @staticmethod
-    def singu(x, a, th=0.01):
+    
+    def singu(self, x, a, th=0.01, kt=5):
         # 专门处理奇异的函数
         x = np.fabs(x)
         res = []
         for _x, _a in zip(x, a):
             if _x > th:
-                res.append(1.0)
+                res.append(self.sig(_x, _a, kt))
             else:
                 res.append(np.sin(np.pi / 2 / th) * _x ** (-_a))
         return np.array(res)

@@ -68,17 +68,22 @@ class lk_obs:
         
         self.d_var_theta = (-(np.pi / (self.Td * self.beta1 * (1 - self.eta))) *
                             (2 * self.a1 * self.beta1 * self.xi + self.a2 * self.beta2 * self.sig(self.xi, self.eta) + self.a3 * self.beta3 * self.sig(self.xi, 2 - self.eta))
-                            - self.sigma * np.tanh(self.xi / self.w0)
+                            - self.sigma * np.sign(self.xi / self.w0)
                             + dy
                             )
         self.d_sigma = (- (2 * np.pi * self.b1 * self.beta1) / (self.Td * self.beta1 * (1 - self.eta)) * self.sigma
                         - (np.pi * self.b2 * self.beta2) / (self.Td * self.beta1 * (1 - self.eta)) * self.sigma
                         - (np.pi * self.b3 * self.beta3) / (self.Td * self.beta1 * (1 - self.eta)) * self.sig(self.sigma, 2 - self.eta)
-                        + self.xi * np.tanh(self.xi / self.w0)
+                        + self.xi * np.sign(self.xi / self.w0)
                         )
+        # self.delta = (-(np.pi / (self.Td * self.beta1 * (1 - self.eta))) *
+        #               (2 * self.a1 * self.beta1 * self.xi + self.a2 * self.beta2 * self.sig(self.xi, self.eta) + self.a3 * self.beta3 * self.sig(self.xi, 2 - self.eta))
+        #               - self.sigma * np.sign(self.xi / self.w0)
+        #               )
+
         self.delta = (-(np.pi / (self.Td * self.beta1 * (1 - self.eta))) *
                       (2 * self.a1 * self.beta1 * self.xi + self.a2 * self.beta2 * self.sig(self.xi, self.eta) + self.a3 * self.beta3 * self.sig(self.xi, 2 - self.eta))
-                      - self.sigma * np.tanh(self.xi / self.w0)
+                      - self.sigma
                       )
         
         self.var_theta = self.var_theta + self.dt * self.d_var_theta
