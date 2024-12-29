@@ -29,12 +29,12 @@ uav_param.CM = 2.136e-8
 uav_param.J0 = 1.01e-5
 uav_param.kr = 1e-3
 uav_param.kt = 1e-3
-uav_param.pos0 = np.array([0, 0, 0])
+uav_param.pos0 = np.array([0, 0, 0])   
 uav_param.vel0 = np.array([0, 0, 0])
 uav_param.angle0 = np.array([0, 0, 0])
 uav_param.pqr0 = np.array([0, 0, 0])
 uav_param.dt = DT
-uav_param.time_max = 50
+uav_param.time_max = 15
 '''Parameter list of the quadrotor'''
 
 '''Parameter list of the attitude controller'''
@@ -63,13 +63,13 @@ pos_ctrl_param = pdt_yyf_smc_param(
     b1_s=np.array([1., 1., 1.]).astype(float),  # 滑模里面的 beta1
     b2_s=np.array([1., 1., 1.]).astype(float),  # 滑模里面的 beta2
     b3_s=np.array([1., 1., 1.]).astype(float),  # 滑模里面的 beta3
-    Ts=np.array([3., 3., 3.]).astype(float),  # 滑模里面的预设时间
+    Ts=np.array([20., 20., 20.]).astype(float),  # 滑模里面的预设时间
     k1_s=np.array([1., 1., 1.]).astype(float),  # 滑模里面的 kappa1
     a_c=np.array([11./13., 11./13., 11./13.]).astype(float),  # 控制器里面的 alpha
     b1_c=np.array([1., 1., 1.]).astype(float),  # 控制器里面的 beta1
     b2_c=np.array([1., 1., 1.]).astype(float),  # 控制器里面的 beta2
     b3_c=np.array([1., 1., 1.]).astype(float),  # 控制器里面的 beta3
-    Tc=np.array([9., 9., 9.]).astype(float),  # 控制器里面的预设时间
+    Tc=np.array([25, 25, 25]).astype(float),  # 控制器里面的预设时间
     k1_c=np.array([1., 1., 1.]).astype(float),  # 控制器里面的 kappa1
     k2=np.array([2, 2, 2]).astype(float),
     dim=3,
