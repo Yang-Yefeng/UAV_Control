@@ -83,7 +83,7 @@ pos_ctrl_param = pdt_yyf_smc_param(
 IS_IDEAL = False
 USE_OBS_IN = False
 USE_OBS_OUT = True
-SAVE = True
+SAVE = False
 cur_time = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d-%H-%M-%S')
 cur_path = os.path.dirname(os.path.abspath(__file__))
 windows = platform.system().lower() == 'windows'
