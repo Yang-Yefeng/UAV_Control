@@ -23,14 +23,23 @@ class yyf_pdt_obs:
         self.alpha = alpha
         self.dim = dim
         self.dt = dt
-
+        
+        haha = 1.
         self.a1 = 0.5 * np.ones(self.dim)
         self.a2 = 2 ** (-self.alpha)
-        self.a3 = 0.5 * np.ones(self.dim)
-
+        self.a3 = 0.5 * np.ones(self.dim) * haha ** (1 - self.alpha)
+        
         self.b1 = 1 * np.ones(self.dim)
         self.b2 = (1 - self.alpha) / (2 ** (self.alpha - 1))
-        self.b3 = (2 - self.alpha) / (3 - self.alpha)
+        self.b3 = (2 - self.alpha) / (3 - self.alpha) * haha ** (1 - self.alpha)
+        
+        # self.a1 = 0.5 * np.ones(self.dim)
+        # self.a2 = 2 ** (-self.alpha)
+        # self.a3 = 0.5 * np.ones(self.dim)
+        #
+        # self.b1 = 1 * np.ones(self.dim)
+        # self.b2 = (1 - self.alpha) / (2 ** (self.alpha - 1))
+        # self.b3 = (2 - self.alpha) / (3 - self.alpha)
 
         a1s = (1 - self.alpha * self.k1) / (2 - 2 * self.alpha)
         a2s = self.k1 - a1s

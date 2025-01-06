@@ -18,8 +18,7 @@ def ref_inner(time, amplitude: np.ndarray, period: np.ndarray, bias_a: np.ndarra
     _r = amplitude * np.sin(w * time + bias_phase) + bias_a
     _dr = amplitude * w * np.cos(w * time + bias_phase)
     _ddr = -amplitude * w ** 2 * np.sin(w * time + bias_phase)
-    _dddr = -amplitude * w ** 3 * np.cos(w * time + bias_phase)
-    return _r, _dr, _ddr, _dddr
+    return _r, _dr, _ddr
 
 
 def ref_uav(time: float, amplitude: np.ndarray, period: np.ndarray, bias_a: np.ndarray, bias_phase: np.ndarray):
@@ -44,14 +43,34 @@ def ref_uav(time: float, amplitude: np.ndarray, period: np.ndarray, bias_a: np.n
     _r = amplitude * np.sin(w * time + bias_phase) + bias_a
     _dr = amplitude * w * np.cos(w * time + bias_phase)
     _ddr = -amplitude * w ** 2 * np.sin(w * time + bias_phase)
-    _dddr = -amplitude * w ** 3 * np.cos(w * time + bias_phase)
     # elif 5.0 < time <= 10.0:
     #     pass
     # elif 10.0<time<=15:
     #     pass
     # else:
     #     _r=np.ones_like(amplitude)
-    return _r, _dr, _ddr, _dddr
+    return _r, _dr, _ddr
+
+def ref_uav_Bernoulli(time: float, amplitude: np.ndarray, period: np.ndarray, bias_a: np.ndarray, bias_phase: np.ndarray):
+    w = 2 * np.pi / period
+    _r = np.zeros(4)
+    _dr = np.zeros(4)
+    _ddr = np.zeros(4)
+    
+    _r[0] = amplitude[0] * np.cos(w[0] * time + bias_phase[0]) + bias_a[0]
+    _r[1] = amplitude[1] * np.sin(2 * w[1] * time + bias_phase[1]) / 2 + bias_a[1]
+    _r[2: 4] = amplitude[2: 4] * np.sin(w[2: 4] * time + bias_phase[2: 4]) + bias_a[2: 4]
+    
+    _dr[0] = -amplitude[0] * w[0] * np.sin(w[0] * time + bias_phase[0])
+    _dr[1] = amplitude[1] * w[1] * np.cos(2 * w[1] * time + bias_phase[1])
+    _dr[2: 4] = amplitude[2: 4] * w[2: 4] * np.cos(w[2: 4] * time + bias_phase[2: 4])
+    
+    _ddr[0] = -amplitude[0] * w[0] ** 2 * np.cos(w[0] * time + bias_phase[0])
+    _ddr[1] = - 2 * amplitude[1] * w[1] ** 2 * np.sin(2 * w[1] * time + bias_phase[1])
+    _ddr[2: 4] = -amplitude[2: 4] * w[2: 4] ** 2 * np.sin(w[2: 4] * time + bias_phase[2: 4])
+    
+    return _r, _dr, _ddr
+    
 
 def generate_uncertainty(time: float, is_ideal: bool = False, att: bool = False) -> np.ndarray:
     """
