@@ -194,8 +194,8 @@ class pdt_yyf_smc:
                              m: float,
                              dd_ref: np.ndarray,
                              obs: np.ndarray,
-                             e_m: float = 0.5,
-                             de_m: float = 1.5):
+                             e_m: np.ndarray = np.array([2, 2, 2]).astype(float),
+                             de_m: np.ndarray = np.array([1.5, 1.5, 1.5]).astype(float)):
         e_eta = np.clip(e_eta, -e_m, e_m)
         dot_e_eta = np.clip(dot_e_eta, -de_m, de_m)
 

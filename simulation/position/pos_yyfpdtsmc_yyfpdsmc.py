@@ -106,8 +106,8 @@ if __name__ == '__main__':
     
     ref_amplitude = np.array([5, 5, 1, np.pi / 2])  # x y z psi
     ref_period = np.array([10, 10, 5, 10])
-    ref_bias_a = np.array([2, 3, 2.0, 0])
-    ref_bias_phase = np.array([0, np.pi / 2, 0, 0])
+    ref_bias_a = np.array([2, 3, 6.0, 0])
+    ref_bias_phase = np.array([0, 0, 0, 0])
     
     rv = 2.0
     t0 = np.pi / 3
@@ -199,8 +199,8 @@ if __name__ == '__main__':
                                       m=uav.m,
                                       dd_ref=dot2_ref[0:3],
                                       obs=obs_eta,
-                                      e_m=np.inf,
-                                      de_m=np.inf)
+                                      e_m=np.array([5., 5., 3.]),
+                                      de_m=np.array([np.inf, np.inf, np.inf]))
 
         '''5. transfer virtual control command to actual throttle, phi_d, and theta_d'''
         phi_d_old = phi_d
