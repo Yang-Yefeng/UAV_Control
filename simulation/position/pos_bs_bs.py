@@ -1,5 +1,6 @@
 import os, sys, datetime
 import matplotlib.pyplot as plt
+import platform
 import numpy as np
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
@@ -19,8 +20,8 @@ observer_pool = ['rd3', 'none']
 # ro:   龙贝格 (勒贝格) 观测器
 # rd3:  三阶鲁棒微分器
 # none: 没观测器
-OBSERVER_IN = observer_pool[0]
-OBSERVER_OUT = observer_pool[0]
+OBSERVER_IN = observer_pool[1]
+OBSERVER_OUT = observer_pool[1]
 
 '''Parameter list of the quadrotor'''
 param = uav_param()
@@ -37,16 +38,24 @@ param.pos0 = np.array([0, 0, 0])
 param.vel0 = np.array([0, 0, 0])
 param.angle0 = np.array([0, 0, 0])
 param.pqr0 = np.array([0, 0, 0])
-param.dt = 0.001
-param.time_max = 20
+param.dt = 0.01
+param.time_max = 30
 '''Parameter list of the quadrotor'''
+
+cur_time = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d-%H-%M-%S')
+cur_path = os.path.dirname(os.path.abspath(__file__))
+windows = platform.system().lower() == 'windows'
+if windows:
+    new_path = cur_path + '\\..\\..\\datasave\\pos_bs_bs-' + cur_time + '/'
+else:
+    new_path = cur_path + '/../../datasave/pos_bs_bs-' + cur_time + '/'
 
 
 if __name__ == '__main__':
     uav = UAV(param)
 
     ctrl_out = backstepping(k_bs1=np.array([0.7, 0.7, 0.7]),  # gain for tracking e_eta
-                            k_bs2=np.array([5., 5., 5.]),  # gain for tracking "de - virtual de_eta_d"
+                            k_bs2=np.array([2., 2., 2.]),  # gain for tracking "de - virtual de_eta_d"
                             dim=3,
                             dt=uav.dt,
                             ctrl0=np.array([0., 0., uav.m * uav.g]))
@@ -57,10 +66,9 @@ if __name__ == '__main__':
                            dt=uav.dt)
 
     '''reference signal initialization'''
-    ref_amplitude = np.array([2, 2, 1, np.pi / 2])  # x y z psi
-    # ref_amplitude = np.array([0, 0, 0, 0])  # x y z psi
-    ref_period = np.array([5, 5, 4, 5])
-    ref_bias_a = np.array([2, 2, 1, 0])
+    ref_amplitude = np.array([5, 5, 1, 0])  # x y z psi
+    ref_period = np.array([10, 10, 5, 10])
+    ref_bias_a = np.array([2, 3, 6.0, 0])
     ref_bias_phase = np.array([np.pi / 2, 0, 0, 0])
 
     '''data storage initialization'''
@@ -72,7 +80,7 @@ if __name__ == '__main__':
     dot_theta_d = (theta_d - theta_d_old) / uav.dt
     throttle = uav.m * uav.g
 
-    ref, dot_ref, _, _ = ref_uav(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)  # 整体参考信号 xd yd zd psid
+    ref, dot_ref, _ = ref_uav(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)  # 整体参考信号 xd yd zd psid
     rhod = np.array([phi_d, theta_d, ref[3]]).astype(float)  # 内环参考信号 phi_d theta_d psi_d
     dot_rhod = np.array([dot_phi_d, dot_theta_d, dot_ref[3]]).astype(float)  # 内环参考信号导数
 
@@ -113,7 +121,7 @@ if __name__ == '__main__':
             print('time: %.2f s.' % (uav.n / int(1 / param.dt)))
 
         '''1. generate reference command and uncertainty'''
-        ref, dot_ref, dot2_ref, dot3_ref = ref_uav(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)  # 整体参考信号 xd yd zd psid
+        ref, dot_ref, dot2_ref = ref_uav(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)  # 整体参考信号 xd yd zd psid
         uncertainty = generate_uncertainty(time=uav.time, is_ideal=IS_IDEAL)
 
         '''2. generate outer-loop reference signal 'eta_d' and its 1st derivatives'''
@@ -179,11 +187,16 @@ if __name__ == '__main__':
                       'state': uav.uav_state_call_back()}
         data_record.record(data=data_block)
 
-    data_record.plot_att()
-    data_record.plot_vel()
+    '''datasave'''
+    os.mkdir(new_path)
+    data_record.package2file(new_path)
+    '''datasave'''
+
+    # data_record.plot_att()
+    # data_record.plot_vel()
     data_record.plot_pos()
-    data_record.plot_torque()
-    data_record.plot_throttle()
+    # data_record.plot_torque()
+    # data_record.plot_throttle()
     data_record.plot_outer_obs()
     # data_record.plot_inner_obs()
     plt.show()

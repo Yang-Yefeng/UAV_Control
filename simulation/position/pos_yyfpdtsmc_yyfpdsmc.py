@@ -34,7 +34,7 @@ uav_param.vel0 = np.array([0, 0, 0])
 uav_param.angle0 = np.array([0, 0, 0])
 uav_param.pqr0 = np.array([0, 0, 0])
 uav_param.dt = DT
-uav_param.time_max = 20
+uav_param.time_max = 30
 '''Parameter list of the quadrotor'''
 
 '''Parameter list of the attitude controller'''
@@ -66,13 +66,13 @@ pos_ctrl_param = pdt_yyf_smc_param(
     b1_s=np.array([1., 1., 1.]).astype(float),  # 滑模里面的 beta1
     b2_s=np.array([1., 1., 1.]).astype(float),  # 滑模里面的 beta2
     b3_s=np.array([1., 1., 1.]).astype(float),  # 滑模里面的 beta3
-    Ts=np.array([5., 5., 5.]).astype(float),  # 滑模里面的预设时间
+    Ts=np.array([10., 10., 10.]).astype(float),  # 滑模里面的预设时间
     k1_s=np.array([1., 1., 1.]).astype(float),  # 滑模里面的 kappa1
     a_c=np.array([11./13., 11./13., 11./13.]).astype(float),  # 控制器里面的 alpha
     b1_c=np.array([1., 1., 1.]).astype(float),  # 控制器里面的 beta1
     b2_c=np.array([1., 1., 1.]).astype(float),  # 控制器里面的 beta2
     b3_c=np.array([1., 1., 1.]).astype(float),  # 控制器里面的 beta3
-    Tc=np.array([10, 10, 10]).astype(float),  # 控制器里面的预设时间
+    Tc=np.array([15, 15, 15]).astype(float),  # 控制器里面的预设时间
     k1_c=np.array([1., 1., 1.]).astype(float),  # 控制器里面的 kappa1
     k2=np.array([2, 2, 2]).astype(float),
     dim=3,
@@ -83,7 +83,7 @@ pos_ctrl_param = pdt_yyf_smc_param(
 IS_IDEAL = False
 USE_OBS_IN = False
 USE_OBS_OUT = True
-SAVE = False
+SAVE = True
 cur_time = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d-%H-%M-%S')
 cur_path = os.path.dirname(os.path.abspath(__file__))
 windows = platform.system().lower() == 'windows'
@@ -98,23 +98,17 @@ if __name__ == '__main__':
     ctrl_out = pdt_yyf_smc(pos_ctrl_param)
 
     '''reference signal initialization'''
-    # ref_amplitude = np.array([2, 2, 1, np.pi / 2])  # x y z psi
-    # # ref_amplitude = np.array([0, 0, 0, 0])  # x y z psi
-    # ref_period = np.array([5, 5, 5, 5])
-    # ref_bias_a = np.array([0., 0., 0., 0.])
-    # ref_bias_phase = np.array([0, np.pi / 2, 0, 0])
-    
-    ref_amplitude = np.array([5, 5, 1, np.pi / 2])  # x y z psi
+    ref_amplitude = np.array([5, 5, 1, 0])  # x y z psi
     ref_period = np.array([10, 10, 5, 10])
     ref_bias_a = np.array([2, 3, 6.0, 0])
-    ref_bias_phase = np.array([0, 0, 0, 0])
+    ref_bias_phase = np.array([np.pi / 2, 0, 0, 0])
     
-    rv = 2.0
-    t0 = np.pi / 3
-    offset_amplitude = np.array([2., 2., 0., 0.])
-    offset_period = np.array([5, 5, 10, 4.])
-    offset_bias_a = np.array([0., 0., 2., 0])
-    offset_bias_phase = np.array([np.pi / 2 + (1 - 1) * t0, (1 - 1) * t0, 0., 0])
+    # rv = 2.0
+    # t0 = np.pi / 3
+    # offset_amplitude = np.array([2., 2., 0., 0.])
+    # offset_period = np.array([5, 5, 10, 4.])
+    # offset_bias_a = np.array([0., 0., 2., 0])
+    # offset_bias_phase = np.array([np.pi / 2 + (1 - 1) * t0, (1 - 1) * t0, 0., 0])
 
     '''data storage initialization'''
     data_record = data_collector(N=int(uav.time_max / uav.dt))
@@ -125,14 +119,8 @@ if __name__ == '__main__':
     dot_theta_d = (theta_d - theta_d_old) / uav.dt
     throttle = uav.m * uav.g
 
-    # ref, dot_ref, dot2_ref = ref_uav(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)  # 整体参考信号 xd yd zd psid
-    # nu, dot_nu, dot2_nu = ref_uav(uav.time, offset_amplitude, offset_period, offset_bias_a, offset_bias_phase)
-    #
-    # ref[:] = ref[:] + nu[:]
-    # dot_ref[:] = dot_ref[:] + dot_nu[:]
-    # dot2_ref[:] = dot2_ref[:] + dot2_nu[:]
-    
-    ref, dot_ref, dot2_ref = ref_uav_Bernoulli(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
+    ref, dot_ref, dot2_ref = ref_uav(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)  # 整体参考信号 xd yd zd psid
+    # ref, dot_ref, dot2_ref = ref_uav_Bernoulli(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
     
     rhod = np.array([phi_d, theta_d, ref[3]]).astype(float)  # 内环参考信号 phi_d theta_d psi_d
     dot_rhod = np.array([dot_phi_d, dot_theta_d, dot_ref[3]]).astype(float)  # 内环参考信号导数
@@ -167,14 +155,14 @@ if __name__ == '__main__':
             print('time: %.2f s.' % (uav.n / int(1 / uav.dt)))
 
         '''1. generate reference command and uncertainty'''
-        # ref, dot_ref, dot2_ref = ref_uav(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
+        ref, dot_ref, dot2_ref = ref_uav(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
         # nu, dot_nu, dot2_nu = ref_uav(uav.time, offset_amplitude, offset_period, offset_bias_a, offset_bias_phase)
         #
         # ref[:] = ref[:] + nu[:]
         # dot_ref[:] = dot_ref[:] + dot_nu[:]
         # dot2_ref[:] = dot2_ref[:] + dot2_nu[:]
         
-        ref, dot_ref, dot2_ref = ref_uav_Bernoulli(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
+        # ref, dot_ref, dot2_ref = ref_uav_Bernoulli(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
         
         uncertainty = generate_uncertainty(time=uav.time, is_ideal=IS_IDEAL, att=False)
 
