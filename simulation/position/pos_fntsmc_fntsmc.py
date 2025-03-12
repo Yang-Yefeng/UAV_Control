@@ -62,7 +62,7 @@ pos_ctrl_param.dt = DT
 
 IS_IDEAL = False
 USE_OBS_IN = False
-USE_OBS_OUT = False
+USE_OBS_OUT = True
 
 cur_time = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d-%H-%M-%S')
 cur_path = os.path.dirname(os.path.abspath(__file__))
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     ctrl_out = fntsmc(pos_ctrl_param)
 
     '''reference signal initialization'''
-    ref_amplitude = np.array([5, 5, 1, 0])  # x y z psi
+    ref_amplitude = np.array([5, 5, 5, 0])  # x y z psi
     ref_period = np.array([10, 10, 5, 10])
     ref_bias_a = np.array([2, 3, 6.0, 0])
     ref_bias_phase = np.array([np.pi / 2, 0, 0, 0])
@@ -211,11 +211,11 @@ if __name__ == '__main__':
     data_record.package2file(new_path)
     '''datasave'''
 
-    # data_record.plot_att()
-    # data_record.plot_vel()
+    data_record.plot_att()
+    data_record.plot_vel()
     data_record.plot_pos()
-    # data_record.plot_torque()
-    # data_record.plot_throttle()
+    data_record.plot_torque()
+    data_record.plot_throttle()
     data_record.plot_outer_obs()
     # data_record.plot_inner_obs()
     plt.show()

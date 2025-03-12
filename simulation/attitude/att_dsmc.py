@@ -55,7 +55,7 @@ if __name__ == '__main__':
     ref_bias_a = np.array([0, 0, 0])
     ref_bias_phase = np.array([0, np.pi / 2, 0])
 
-    rhod, dot_rhod, dot2_rhod, dot3_rhod = ref_inner(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
+    rhod, dot_rhod, dot2_rhod = ref_inner(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
     e0 = uav.rho1() - rhod
     de0 = uav.dot_rho1() - dot_rhod
 
@@ -118,7 +118,7 @@ if __name__ == '__main__':
             print('time: %.2f s.' % (uav.n / int(1 / param.dt)))
         '''1. 计算 tk 时刻参考信号 和 生成不确定性'''
         uncertainty = generate_uncertainty(time=uav.time, is_ideal=False)
-        rhod, dot_rhod, dot2_rhod, dot3_rhod = ref_inner(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
+        rhod, dot_rhod, dot2_rhod = ref_inner(uav.time, ref_amplitude, ref_period, ref_bias_a, ref_bias_phase)
         '''1. 计算 tk 时刻参考信号 和 生成不确定性'''
 
         '''2. 计算 tk 时刻误差信号'''

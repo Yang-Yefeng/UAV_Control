@@ -248,8 +248,8 @@ if __name__ == '__main__':
         obs_out.save_adap_obs_param(new_path, flag='pos')
     '''datasave'''
 
-    data_record.plot_att()
-    # data_record.plot_vel()
+    # data_record.plot_att()
+    data_record.plot_vel()
     data_record.plot_pos()
     # data_record.plot_torque()
     # data_record.plot_throttle()
