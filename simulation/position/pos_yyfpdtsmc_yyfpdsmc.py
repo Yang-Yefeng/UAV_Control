@@ -34,7 +34,7 @@ uav_param.vel0 = np.array([0, 0, 0])
 uav_param.angle0 = np.array([0, 0, 0])
 uav_param.pqr0 = np.array([0, 0, 0])
 uav_param.dt = DT
-uav_param.time_max = 30
+uav_param.time_max = 40
 '''Parameter list of the quadrotor'''
 
 '''Parameter list of the attitude controller'''
